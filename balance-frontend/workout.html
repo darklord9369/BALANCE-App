@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Log Workout</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">3. Log Workout Screen</span>
+        <h1>Log Workout</h1>
+        <p>Track activity, intensity, and effort.</p>
+      </div>
+
+      <div class="compact-bar">
+        <div>
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" />
+        </div>
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" type="number" min="1" />
+        </div>
+      </div>
+
+      <p id="statusMessage" class="status">Ready to log workout.</p>
+
+      <form id="workoutForm" class="form-stack">
+        <div>
+          <label for="workoutTypeId">Workout Type</label>
+          <select id="workoutTypeId" required>
+            <option value="">Select workout type</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="workoutDate">Workout Date</label>
+          <input id="workoutDate" type="date" required />
+        </div>
+
+        <div>
+          <label for="durationMinutes">Duration (Minutes)</label>
+          <input id="durationMinutes" type="number" min="1" placeholder="Duration Minutes" required />
+        </div>
+
+        <div>
+          <label for="perceivedIntensity">Perceived Intensity</label>
+          <select id="perceivedIntensity" required>
+            <option value="">Select intensity</option>
+            <option value="Low">Low</option>
+            <option value="Moderate">Moderate</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="notes">Notes</label>
+          <input id="notes" type="text" placeholder="Optional notes" />
+        </div>
+
+        <button type="submit">Save Workout</button>
+      </form>
+
+      <div class="toolbar split-links">
+        <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
+        <a class="button-link btn-secondary-link" href="./meal.html">Go to Meal Log</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/workout.js"></script>
+</body>
+</html>

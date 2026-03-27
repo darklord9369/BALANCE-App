@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Log Meal</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">4. Log Meal Screen</span>
+        <h1>Log Meal</h1>
+        <p>Choose a fueling option that matches your day.</p>
+      </div>
+
+      <div class="compact-bar">
+        <div>
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" />
+        </div>
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" type="number" min="1" />
+        </div>
+      </div>
+
+      <p id="statusMessage" class="status">Ready to log meal.</p>
+
+      <form id="mealForm" class="form-stack">
+        <div>
+          <label for="mealCategoryId">Meal Category</label>
+          <select id="mealCategoryId" required>
+            <option value="">Select meal category</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="mealDate">Meal Date</label>
+          <input id="mealDate" type="date" required />
+        </div>
+
+        <div>
+          <label for="mealTime">Meal Time</label>
+          <select id="mealTime" required>
+            <option value="">Select meal time</option>
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+            <option value="Snack">Snack</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="notes">Notes</label>
+          <textarea id="notes" placeholder="Optional notes"></textarea>
+        </div>
+
+        <button type="submit">Save Meal</button>
+      </form>
+
+      <div class="toolbar split-links">
+        <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
+        <a class="button-link btn-secondary-link" href="./workout.html">Go to Workout Log</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/meal.js"></script>
+</body>
+</html>

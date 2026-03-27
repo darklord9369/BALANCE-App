@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Onboarding</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">      Onboarding & Event Setup</span>
+        <h1>Welcome to BALANCE</h1>
+        <p>Plan around your classes, exams, and deadlines.</p>
+      </div>
+
+      <div class="form-stack">
+        <div>
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" placeholder="http://localhost:5000" />
+        </div>
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" type="number" min="1" placeholder="1" />
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button id="loadSetupBtn">Load Setup</button>
+        <button id="loadDemoBtn" class="btn-secondary">Demo Values</button>
+      </div>
+
+      <p id="statusMessage" class="status">Not connected.</p>
+
+      <div class="mini-panel">
+        <h2>Upcoming Events</h2>
+        <div id="upcomingEvents" class="list-cards">
+          <div class="empty-state">Load setup to see events.</div>
+        </div>
+      </div>
+
+      <form id="eventForm" class="form-stack">
+        <h2>Add Upcoming Event</h2>
+        <input id="eventTitle" type="text" placeholder="Algorithms Midterm" required />
+        <textarea id="eventDescription" placeholder="Short description"></textarea>
+        <div class="grid-two">
+          <select id="eventTypeId" required>
+            <option value="">Select event type</option>
+          </select>
+          <select id="eventStressLevel" required>
+            <option value="">Select stress level</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div class="grid-two">
+          <input id="startDate" type="date" required />
+          <input id="endDate" type="date" required />
+        </div>
+        <button type="submit">Save Event</button>
+      </form>
+
+      <div class="toolbar">
+        <a class="button-link" href="./dashboard.html">Continue To DashBoard</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/onboarding.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Dashboard</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">2. Main Dashboard</span>
+        <h1 id="welcomeText">Welcome!</h1>
+        <p>Your daily workout and fueling guidance.</p>
+      </div>
+
+      <div class="compact-bar">
+        <div>
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" />
+        </div>
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" type="number" min="1" />
+        </div>
+        <button id="loadDashboardBtn">Refresh</button>
+      </div>
+
+      <p id="statusMessage" class="status">Load dashboard to begin.</p>
+
+      <section class="info-card accent-card">
+        <h2>Stress Level</h2>
+        <div id="stressBadge" class="badge badge-high">High</div>
+      </section>
+
+      <section class="info-card">
+        <h2>Today's Workout</h2>
+        <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
+      </section>
+
+      <section class="info-card">
+        <h2>Fueling Guidance</h2>
+        <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
+      </section>
+
+      <section class="info-card">
+        <h2>Quick Summary</h2>
+        <div class="stats-row">
+          <div class="mini-stat"><span>Events</span><strong id="eventCount">0</strong></div>
+          <div class="mini-stat"><span>Workouts</span><strong id="workoutCount">0</strong></div>
+          <div class="mini-stat"><span>Meals</span><strong id="mealCount">0</strong></div>
+          <div class="mini-stat"><span>Wellness</span><strong id="wellnessCount">0</strong></div>
+        </div>
+      </section>
+
+      <div class="toolbar split-links">
+        <a class="button-link" href="./workout.html">Log Workout</a>
+        <a class="button-link btn-secondary-link" href="./meal.html">Log Meal</a>
+      </div>
+
+      <div class="toolbar split-links">
+        <a class="button-link btn-outline-link" href="./insights.html">Weekly Insights</a>
+        <a class="button-link btn-outline-link" href="./index.html">Back to Setup</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/dashboard.js"></script>
+</body>
+</html>

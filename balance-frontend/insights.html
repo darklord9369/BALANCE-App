@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Weekly Insights</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">5. Weekly Insight Screen</span>
+        <h1>Weekly Summary</h1>
+        <p>Review your stress, workouts, meals, and wellness patterns.</p>
+      </div>
+
+      <div class="compact-bar">
+        <div>
+          <label for="apiBaseUrl">API Base URL</label>
+          <input id="apiBaseUrl" type="text" />
+        </div>
+        <div>
+          <label for="userId">User ID</label>
+          <input id="userId" type="number" min="1" />
+        </div>
+        <button id="refreshInsightsBtn">Refresh</button>
+      </div>
+
+      <p id="statusMessage" class="status">Load insights to begin.</p>
+
+      <section class="info-card">
+        <h2>Weekly Summary</h2>
+        <div id="summaryText" class="info-body">No summary loaded yet.</div>
+      </section>
+
+      <section class="info-card">
+        <h2>Weekly Counts</h2>
+        <div class="stats-row">
+          <div class="mini-stat"><span>Stress Logs</span><strong id="stressCount">0</strong></div>
+          <div class="mini-stat"><span>Workouts</span><strong id="workoutCount">0</strong></div>
+          <div class="mini-stat"><span>Meals</span><strong id="mealCount">0</strong></div>
+          <div class="mini-stat"><span>Recovery Avg</span><strong id="recoveryAvg">0</strong></div>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <h2>Simple Trend View</h2>
+        <div class="chart-row">
+          <div class="bar-group">
+            <span>Stress</span>
+            <div id="stressBar" class="bar-fill"></div>
+          </div>
+          <div class="bar-group">
+            <span>Workouts</span>
+            <div id="workoutBar" class="bar-fill alt"></div>
+          </div>
+          <div class="bar-group">
+            <span>Meals</span>
+            <div id="mealBar" class="bar-fill soft"></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="toolbar split-links">
+        <button id="generateSummaryBtn">Generate Weekly Summary</button>
+        <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/insights.js"></script>
+</body>
+</html>
