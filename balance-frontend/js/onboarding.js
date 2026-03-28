@@ -1,5 +1,14 @@
 import { setApiBaseUrl, getEvents, createEvent, getEventTypes } from "./api.js";
 import { loadAppState, saveAppState, setStatus, todayIso } from "./common.js";
+import { requireAuth, logout } from "./common.js";
+
+const auth = requireAuth();
+if (!auth) throw new Error("Unauthorized");
+
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", logout);
+}
 
 const els = {
   apiBaseUrl: document.getElementById("apiBaseUrl"),

@@ -63,6 +63,50 @@ button, .button-link { border: none; padding: 14px 16px; cursor: pointer; font-w
 .bar-fill { height: 18px; border-radius: 999px; background: linear-gradient(90deg, #f59e0b, #f97316); width: 10%; }
 .bar-fill.alt { background: linear-gradient(90deg, #3b82f6, #2563eb); }
 .bar-fill.soft { background: linear-gradient(90deg, #10b981, #22c55e); }
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logout button */
+.logout-btn {
+  font-size: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  transition: transform 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+/* Hover effect */
+.logout-btn:hover {
+  color: #ef4444;
+  transform: scale(1.15);
+}
+
+/* Tooltip text */
+.logout-btn::after {
+  content: "Logout";
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #111827;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+/* Show tooltip on hover */
+.logout-btn:hover::after {
+  opacity: 1;
+}
 @media (max-width: 520px) {
   .compact-bar, .grid-two, .stats-row { grid-template-columns: 1fr; }
 }

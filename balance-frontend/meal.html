@@ -10,20 +10,12 @@
   <main class="app-shell">
     <section class="screen-card">
       <div class="screen-header">
-        <span class="screen-step">4. Log Meal Screen</span>
+        <div class="topbar">
+          <span id="welcomeUser"></span>
+          <button id="logoutBtn">Logout</button>
+        </div>
         <h1>Log Meal</h1>
         <p>Choose a fueling option that matches your day.</p>
-      </div>
-
-      <div class="compact-bar">
-        <div>
-          <label for="apiBaseUrl">API Base URL</label>
-          <input id="apiBaseUrl" type="text" />
-        </div>
-        <div>
-          <label for="userId">User ID</label>
-          <input id="userId" type="number" min="1" />
-        </div>
       </div>
 
       <p id="statusMessage" class="status">Ready to log meal.</p>
