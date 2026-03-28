@@ -10,20 +10,15 @@
   <main class="app-shell">
     <section class="screen-card">
       <div class="screen-header">
-        <span class="screen-step">2. Main Dashboard</span>
+        <div class="topbar">
+          <span id="welcomeUser"></span>
+          <button id="logoutBtn">Logout</button>
+        </div>
         <h1 id="welcomeText">Welcome!</h1>
         <p>Your daily workout and fueling guidance.</p>
       </div>
 
       <div class="compact-bar">
-        <div>
-          <label for="apiBaseUrl">API Base URL</label>
-          <input id="apiBaseUrl" type="text" />
-        </div>
-        <div>
-          <label for="userId">User ID</label>
-          <input id="userId" type="number" min="1" />
-        </div>
         <button id="loadDashboardBtn">Refresh</button>
       </div>
 
@@ -61,7 +56,6 @@
 
       <div class="toolbar split-links">
         <a class="button-link btn-outline-link" href="./insights.html">Weekly Insights</a>
-        <a class="button-link btn-outline-link" href="./index.html">Back to Setup</a>
       </div>
     </section>
   </main>

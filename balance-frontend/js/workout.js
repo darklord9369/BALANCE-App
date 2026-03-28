@@ -1,9 +1,12 @@
-import { setApiBaseUrl, createWorkoutLog, getWorkoutTypes } from "./api.js";
-import { loadAppState, saveAppState, setStatus, todayIso } from "./common.js";
+import { createWorkoutLog, getWorkoutTypes } from "./api.js";
+import { setStatus, todayIso, requireAuth, logout } from "./common.js";
+
+const auth = requireAuth();
+if (!auth) throw new Error("Unauthorized");
 
 const els = {
-  apiBaseUrl: document.getElementById("apiBaseUrl"),
-  userId: document.getElementById("userId"),
+  welcomeUser: document.getElementById("welcomeUser"),
+  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   workoutForm: document.getElementById("workoutForm"),
   workoutTypeId: document.getElementById("workoutTypeId"),
@@ -13,34 +16,34 @@ const els = {
   notes: document.getElementById("notes")
 };
 
+els.welcomeUser.textContent = `Welcome, ${auth.userName}`;
+els.logoutBtn?.addEventListener("click", logout);
+
 function setDefaults() {
-  const state = loadAppState();
-  els.apiBaseUrl.value = state.apiBaseUrl;
-  els.userId.value = state.userId;
   els.workoutDate.value = todayIso();
 }
 
 async function loadWorkoutTypeOptions() {
-  const apiBaseUrl = els.apiBaseUrl.value.trim();
-  setApiBaseUrl(apiBaseUrl);
-
   const workoutTypes = await getWorkoutTypes();
 
   els.workoutTypeId.innerHTML = `
     <option value="">Select workout type</option>
-    ${workoutTypes.map(type => `
+    ${workoutTypes
+      .map(
+        (type) => `
       <option value="${type.workoutTypeId ?? type.id}">
         ${type.name}
       </option>
-    `).join("")}
+    `
+      )
+      .join("")}
   `;
 }
 
-function buildWorkoutPayload(userId) {
+function buildWorkoutPayload() {
   return {
-    userId,
     workoutTypeId: Number(els.workoutTypeId.value),
-    eventId: 0,
+    eventId: null,
     workoutDate: els.workoutDate.value,
     durationMinutes: Number(els.durationMinutes.value),
     perceivedIntensity: els.perceivedIntensity.value.trim(),
@@ -56,22 +59,15 @@ els.workoutForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   try {
-    const apiBaseUrl = els.apiBaseUrl.value.trim();
-    const userId = Number(els.userId.value.trim());
-
-    saveAppState({ apiBaseUrl, userId });
-    setApiBaseUrl(apiBaseUrl);
-
-    const payload = buildWorkoutPayload(userId);
+    const payload = buildWorkoutPayload();
     await createWorkoutLog(payload);
 
     setStatus(els.status, "Workout saved.");
     els.workoutForm.reset();
     els.workoutDate.value = todayIso();
-
     await loadWorkoutTypeOptions();
   } catch (error) {
-    setStatus(els.status, error.message, true);
+    setStatus(els.status, error.message || "Failed to save workout.", true);
   }
 });
 
@@ -80,7 +76,7 @@ async function initializePage() {
     setDefaults();
     await loadWorkoutTypeOptions();
   } catch (error) {
-    setStatus(els.status, error.message, true);
+    setStatus(els.status, error.message || "Failed to load page.", true);
   }
 }
 

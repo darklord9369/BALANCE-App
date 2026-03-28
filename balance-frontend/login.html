@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Fitness Planner</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <span class="screen-step">1. Login / Register</span>
+        <h1>Fitness Planner</h1>
+        <p>Register a new account or log in to continue.</p>
+      </div>
+
+      <p id="statusMessage" class="status"></p>
+
+      <section class="info-card">
+        <h2>Login</h2>
+        <form id="loginForm" class="form-stack">
+          <div>
+            <label for="loginEmail">Email</label>
+            <input type="email" id="loginEmail" required />
+          </div>
+
+          <div>
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" required />
+          </div>
+
+          <button type="submit">Login</button>
+        </form>
+      </section>
+
+      <section class="info-card">
+        <h2>Register</h2>
+        <form id="registerForm" class="form-stack">
+          <div>
+            <label for="registerFirstName">First Name</label>
+            <input type="text" id="registerFirstName" required />
+          </div>
+
+          <div>
+            <label for="registerLastName">Last Name</label>
+            <input type="text" id="registerLastName" />
+          </div>
+
+          <div>
+            <label for="registerEmail">Email</label>
+            <input type="email" id="registerEmail" required />
+          </div>
+
+          <div>
+            <label for="registerPassword">Password</label>
+            <input type="password" id="registerPassword" required />
+          </div>
+
+          <button type="submit">Register</button>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="./js/login.js"></script>
+</body>
+</html>
