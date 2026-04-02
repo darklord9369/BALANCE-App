@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/git copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj": {}
+    "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/April Week 01 copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj": {}
   },
   "projects": {
-    "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/git copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj": {
+    "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/April Week 01 copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/git copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj",
+        "projectUniqueName": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/April Week 01 copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj",
         "projectName": "FitnessPlanner.Api",
-        "projectPath": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/git copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj",
+        "projectPath": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/April Week 01 copy/BALANCE-App/balance-backend/FitnessPlanner.Api/FitnessPlanner.Api.csproj",
         "packagesPath": "/Users/gharikr/.nuget/packages/",
-        "outputPath": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/git copy/BALANCE-App/balance-backend/FitnessPlanner.Api/obj/",
+        "outputPath": "/Users/gharikr/Library/CloudStorage/OneDrive-purdue.edu/CNIT566 - Web Dev/Project/April Week 01 copy/BALANCE-App/balance-backend/FitnessPlanner.Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/gharikr/.nuget/NuGet/NuGet.Config"
