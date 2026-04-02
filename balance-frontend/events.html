@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Log Event</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="toolbar">
+        <button id="logoutBtn" type="button">Logout</button>
+      </div>
+
+      <div class="screen-header">
+        <h1 id="pageTitle">Log Event</h1>
+        <p>Add or update an event for the selected date.</p>
+      </div>
+
+      <div id="statusMessage" class="success-box" style="display:none;"></div>
+
+      <form id="eventForm" class="form-stack">
+        <div>
+          <label for="title">Event Title</label>
+          <input id="title" type="text" placeholder="Algorithms Midterm" required />
+        </div>
+
+        <div>
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="Short description" rows="4"></textarea>
+        </div>
+
+        <div class="split-grid">
+          <div>
+            <label for="eventTypeId">Event Type</label>
+            <select id="eventTypeId" required>
+              <option value="">Select event type</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="stressLevel">Stress Level</label>
+            <select id="stressLevel" required>
+              <option value="">Select stress level</option>
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="split-grid">
+          <div>
+            <label for="startDate">Start Date</label>
+            <input id="startDate" type="date" required />
+          </div>
+
+          <div>
+            <label for="endDate">End Date</label>
+            <input id="endDate" type="date" required />
+          </div>
+        </div>
+
+    </form>
+
+    <div class="toolbar split-links">
+      <button id="submitBtn" type="submit" form="eventForm">Save Event</button>
+    </div>
+    
+    <div class="toolbar equal-actions">
+      <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
+      <a id="backToEntriesLink" class="button-link btn-secondary-link" href="./event-entries.html">Back to Entries</a>
+    </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/events.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BALANCE - Meal Entries</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="screen-card">
+      <div class="screen-header">
+        <div class="topbar">
+          <button id="logoutBtn" type="button">Logout</button>
+        </div>
+        <h1>Meals</h1>
+        <p>View and manage meal logs for the selected date.</p>
+      </div>
+
+      <div id="statusMessage" class="success-box" style="display:none;"></div>
+
+      <div class="compact-bar">
+        <div>
+          <label for="selectedDateDisplay">Selected Date</label>
+          <input id="selectedDateDisplay" type="text" readonly />
+        </div>
+      </div>
+
+      <section class="info-card">
+        <table class="entry-table equal-columns">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Meal Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mealTableBody">
+            <tr>
+              <td colspan="3">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="toolbar equal-actions">
+        <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
+        <a class="button-link" href="./meal.html?returnTo=meal-entries">New Log</a>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./js/meal-entries.js"></script>
+</body>
+</html>

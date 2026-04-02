@@ -102,7 +102,85 @@ button, .button-link { border: none; padding: 14px 16px; cursor: pointer; font-w
   transition: opacity 0.2s ease;
   white-space: nowrap;
 }
+.equal-actions {
+  display: flex;
+  gap: 12px;
+}
 
+.equal-actions > * {
+  flex: 1;
+}
+
+.split-links {
+  display: flex;
+  gap: 12px;
+}
+
+.split-links > * {
+  width: 100%;
+}
+
+.entry-table.equal-columns {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.entry-table.equal-columns th,
+.entry-table.equal-columns td {
+  width: auto;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.entry-table.equal-columns th {
+  white-space: nowrap;
+}
+
+.action-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  border: none;
+  background-color: #2563eb; /* blue */
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.icon-btn:hover {
+  background-color: #1d4ed8; /* darker blue */
+  transform: scale(1.05);
+}
+
+.button-link,
+.toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .equal-actions {
+    flex-direction: row;
+  }
+
+  .equal-actions > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
 /* Show tooltip on hover */
 .logout-btn:hover::after {
   opacity: 1;
