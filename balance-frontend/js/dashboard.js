@@ -10,7 +10,9 @@ import {
   setStatus,
   stressClass,
   requireAuth,
-  logout
+  logout,
+  getSelectedDate,
+  saveSelectedDate
 } from "./common.js";
 
 const auth = requireAuth();
@@ -18,8 +20,6 @@ if (!auth) throw new Error("Unauthorized");
 
 const els = {
   status: document.getElementById("statusMessage"),
-  loadDashboardBtn: document.getElementById("loadDashboardBtn"),
-  welcomeUser: document.getElementById("welcomeUser"),
   welcomeText: document.getElementById("welcomeText"),
   stressBadge: document.getElementById("stressBadge"),
   workoutSuggestion: document.getElementById("workoutSuggestion"),
@@ -28,11 +28,28 @@ const els = {
   workoutCount: document.getElementById("workoutCount"),
   mealCount: document.getElementById("mealCount"),
   wellnessCount: document.getElementById("wellnessCount"),
-  logoutBtn: document.getElementById("logoutBtn")
+  logoutBtn: document.getElementById("logoutBtn"),
+  selectedDate: document.getElementById("selectedDate")
 };
 
-els.welcomeUser.textContent = `Welcome, ${auth.userName}`;
 els.logoutBtn?.addEventListener("click", logout);
+
+function syncSelectedDateInput() {
+  if (els.selectedDate) {
+    els.selectedDate.value = getSelectedDate();
+  }
+}
+
+if (els.selectedDate) {
+  syncSelectedDateInput();
+
+  els.selectedDate.addEventListener("change", async () => {
+    const newDate = els.selectedDate.value || getSelectedDate();
+    saveSelectedDate(newDate);
+    syncSelectedDateInput();
+    await loadDashboard();
+  });
+}
 
 function buildWorkoutGuidance(stressText, latestWellness) {
   const s = String(stressText || "").toLowerCase();
@@ -67,13 +84,12 @@ function buildMealGuidance(stressText, latestWellness) {
 function getDisplayName(user) {
   if (user?.firstName) return user.firstName;
   if (user?.email) return user.email;
+  if (auth?.userName) return auth.userName;
   return `User ${auth.userId}`;
 }
 
 function deriveStressText(nearestEvent, latestWellness) {
-  if (nearestEvent?.stressLevel) {
-    return nearestEvent.stressLevel;
-  }
+  if (nearestEvent?.stressLevel) return nearestEvent.stressLevel;
 
   if (latestWellness?.stressLevel != null) {
     const s = latestWellness.stressLevel;
@@ -84,8 +100,24 @@ function deriveStressText(nearestEvent, latestWellness) {
   return "Low";
 }
 
+function isSameDate(value, selectedDate) {
+  return String(value || "").slice(0, 10) === selectedDate;
+}
+
+function isEventActiveOnDate(event, selectedDate) {
+  const start = String(event?.startDate || "").slice(0, 10);
+  const end = String(event?.endDate || "").slice(0, 10);
+
+  if (!start || !end) return false;
+
+  return start <= selectedDate && end >= selectedDate;
+}
+
 async function loadDashboard() {
   try {
+    const selectedDate = getSelectedDate();
+    syncSelectedDateInput();
+
     setStatus(els.status, "Loading dashboard...");
 
     const [user, events, workouts, meals, wellness] = await Promise.all([
@@ -101,34 +133,69 @@ async function loadDashboard() {
     const userMeals = meals || [];
     const userWellness = wellness || [];
 
-    const nearestEvent = [...userEvents].sort(
+    const dayEvents = userEvents.filter((event) =>
+      isEventActiveOnDate(event, selectedDate)
+    );
+
+    const dayWorkouts = userWorkouts.filter((workout) =>
+      isSameDate(workout.workoutDate, selectedDate)
+    );
+
+    const dayMeals = userMeals.filter((meal) =>
+      isSameDate(meal.mealDate, selectedDate)
+    );
+
+    const dayWellness = userWellness.filter((entry) =>
+      isSameDate(entry.logDate, selectedDate)
+    );
+
+    const nearestEvent = [...dayEvents].sort(
       (a, b) => new Date(a.startDate || 0) - new Date(b.startDate || 0)
     )[0];
 
-    const latestWellness = [...userWellness].sort(
+    const latestWellness = [...dayWellness].sort(
       (a, b) => new Date(b.logDate || 0) - new Date(a.logDate || 0)
     )[0];
 
     const stressText = deriveStressText(nearestEvent, latestWellness);
 
-    els.welcomeText.textContent = `Welcome, ${getDisplayName(user)}!`;
-    els.stressBadge.textContent = stressText;
-    els.stressBadge.className = `badge ${stressClass(stressText)}`;
+    if (els.welcomeText) {
+      els.welcomeText.textContent = `Welcome, ${getDisplayName(user)}!`;
+    }
 
-    els.workoutSuggestion.textContent = buildWorkoutGuidance(stressText, latestWellness);
-    els.mealSuggestion.textContent = buildMealGuidance(stressText, latestWellness);
+    if (els.stressBadge) {
+      els.stressBadge.textContent = stressText;
+      els.stressBadge.className = `badge ${stressClass(stressText)}`;
+    }
 
-    els.eventCount.textContent = userEvents.length;
-    els.workoutCount.textContent = userWorkouts.length;
-    els.mealCount.textContent = userMeals.length;
-    els.wellnessCount.textContent = userWellness.length;
+    if (els.workoutSuggestion) {
+      els.workoutSuggestion.textContent = buildWorkoutGuidance(stressText, latestWellness);
+    }
+
+    if (els.mealSuggestion) {
+      els.mealSuggestion.textContent = buildMealGuidance(stressText, latestWellness);
+    }
+
+    if (els.eventCount) {
+      els.eventCount.textContent = dayEvents.length;
+    }
+
+    if (els.workoutCount) {
+      els.workoutCount.textContent = dayWorkouts.length;
+    }
+
+    if (els.mealCount) {
+      els.mealCount.textContent = dayMeals.length;
+    }
+
+    if (els.wellnessCount) {
+      els.wellnessCount.textContent = dayWellness.length;
+    }
 
     setStatus(els.status, "Dashboard loaded.");
   } catch (error) {
     setStatus(els.status, error.message || "Failed to load dashboard.", true);
   }
 }
-
-els.loadDashboardBtn?.addEventListener("click", loadDashboard);
 
 loadDashboard();

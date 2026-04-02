@@ -11,14 +11,13 @@
     <section class="screen-card">
       <div class="screen-header">
         <div class="topbar">
-          <span id="welcomeUser"></span>
           <button id="logoutBtn">Logout</button>
         </div>
-        <h1>Log Meal</h1>
+        <h1 id="pageTitle">Log Meal</h1>
         <p>Choose a fueling option that matches your day.</p>
       </div>
 
-      <p id="statusMessage" class="status">Ready to log meal.</p>
+      <div id="statusMessage" class="success-box" style="display:none;"></div>
 
       <form id="mealForm" class="form-stack">
         <div>
@@ -29,8 +28,8 @@
         </div>
 
         <div>
-          <label for="mealDate">Meal Date</label>
-          <input id="mealDate" type="date" required />
+          <label>Selected Date</label>
+          <input id="selectedDateDisplay" type="text" readonly />
         </div>
 
         <div>
@@ -49,12 +48,12 @@
           <textarea id="notes" placeholder="Optional notes"></textarea>
         </div>
 
-        <button type="submit">Save Meal</button>
+        <button id="submitBtn" type="submit">Save Meal</button>
       </form>
 
-      <div class="toolbar split-links">
+      <div class="toolbar equal-actions">
         <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
-        <a class="button-link btn-secondary-link" href="./workout.html">Go to Workout Log</a>
+        <a id="backToEntriesLink" class="button-link btn-secondary-link" href="./meal-entries.html">Back to Entries</a>
       </div>
     </section>
   </main>

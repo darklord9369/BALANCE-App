@@ -5,7 +5,8 @@ const STORAGE_KEYS = {
   token: "balance_token",
   userId: "balance_userId",
   userName: "balance_userName",
-  userEmail: "balance_userEmail"
+  userEmail: "balance_userEmail",
+  selectedDate: "balance_selectedDate"
 };
 
 export function saveAppState({
@@ -65,6 +66,7 @@ export function clearAuth() {
   localStorage.removeItem(STORAGE_KEYS.userId);
   localStorage.removeItem(STORAGE_KEYS.userName);
   localStorage.removeItem(STORAGE_KEYS.userEmail);
+  localStorage.removeItem(STORAGE_KEYS.selectedDate);
 }
 
 export function logout() {
@@ -92,6 +94,20 @@ export function redirectIfLoggedIn(targetPage = "dashboard.html") {
 
 export function todayIso() {
   return new Date().toISOString().split("T")[0];
+}
+
+export function getSelectedDate() {
+  const savedDate = localStorage.getItem(STORAGE_KEYS.selectedDate);
+  return savedDate || todayIso();
+}
+
+export function saveSelectedDate(value) {
+  if (!value) return;
+  localStorage.setItem(STORAGE_KEYS.selectedDate, value);
+}
+
+export function clearSelectedDate() {
+  localStorage.removeItem(STORAGE_KEYS.selectedDate);
 }
 
 export function setStatus(el, message, isError = false) {

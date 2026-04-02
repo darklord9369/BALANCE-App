@@ -11,7 +11,6 @@
     <section class="screen-card">
       <div class="screen-header">
         <div class="topbar">
-          <span id="welcomeUser"></span>
           <button id="logoutBtn">Logout</button>
         </div>
         <h1 id="welcomeText">Welcome!</h1>
@@ -19,10 +18,13 @@
       </div>
 
       <div class="compact-bar">
-        <button id="loadDashboardBtn">Refresh</button>
+        <div>
+          <label for="selectedDate">Selected Date</label>
+          <input id="selectedDate" type="date" />
+        </div>
       </div>
 
-      <p id="statusMessage" class="status">Load dashboard to begin.</p>
+      <p id="statusMessage" class="status" style="display:none;"></p>
 
       <section class="info-card accent-card">
         <h2>Stress Level</h2>
@@ -49,11 +51,12 @@
         </div>
       </section>
 
-      <div class="toolbar split-links">
-        <a class="button-link" href="./workout.html">Log Workout</a>
-        <a class="button-link btn-secondary-link" href="./meal.html">Log Meal</a>
+      <div class="toolbar equal-actions">
+        <a class="button-link" href="./event-entries.html">Events</a>
+        <a class="button-link" href="./workout-entries.html">Workouts</a>
+        <a class="button-link" href="./meal-entries.html">Meals</a>
       </div>
-
+      
       <div class="toolbar split-links">
         <a class="button-link btn-outline-link" href="./insights.html">Weekly Insights</a>
       </div>
