@@ -5,6 +5,99 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BALANCE - Weekly Insights</title>
   <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .trend-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  
+    .trend-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+  
+    .trend-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      font-weight: 600;
+      color: #4f6484;
+    }
+  
+    .trend-hover-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #1f2a44;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+  
+    .trend-item:hover .trend-hover-value {
+      opacity: 1;
+    }
+  
+    .trend-track {
+      width: 100%;
+      height: 18px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(59, 130, 246, 0.12);
+    }
+  
+    .trend-fill {
+      height: 100%;
+      min-width: 36px;
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+  
+    .trend-fill.stress {
+      background: linear-gradient(90deg, #f59e0b, #f97316);
+    }
+  
+    .trend-fill.workouts {
+      background: linear-gradient(90deg, #2563eb, #3b82f6);
+    }
+  
+    .trend-fill.meals {
+      background: linear-gradient(90deg, #10b981, #22c55e);
+    }
+  
+    .summary-bullets {
+      white-space: pre-line;
+      line-height: 1.7;
+    }
+
+    .status-banner {
+      margin: 0 0 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .status-loading {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+    }
+
+    .status-error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+  </style>
 </head>
 <body>
   <main class="app-shell">
@@ -17,47 +110,51 @@
         <p>Review your stress, workouts, meals, and wellness patterns.</p>
       </div>
 
-      <div class="compact-bar">
-        <button id="refreshInsightsBtn">Refresh</button>
-      </div>
-
-      <p id="statusMessage" class="status">Load insights to begin.</p>
+      <div id="statusMessage" class="status-banner status-loading">Loading insights...</div>
 
       <section class="info-card">
         <h2>Weekly Summary</h2>
-        <div id="summaryText" class="info-body">No summary loaded yet.</div>
-      </section>
-
-      <section class="info-card">
-        <h2>Weekly Counts</h2>
-        <div class="stats-row">
-          <div class="mini-stat"><span>Stress Logs</span><strong id="stressCount">0</strong></div>
-          <div class="mini-stat"><span>Workouts</span><strong id="workoutCount">0</strong></div>
-          <div class="mini-stat"><span>Meals</span><strong id="mealCount">0</strong></div>
-          <div class="mini-stat"><span>Recovery Avg</span><strong id="recoveryAvg">0</strong></div>
-        </div>
+        <div id="summaryText" class="info-body summary-bullets">No summary loaded yet.</div>
       </section>
 
       <section class="info-card">
         <h2>Simple Trend View</h2>
-        <div class="chart-row">
-          <div class="bar-group">
-            <span>Stress</span>
-            <div id="stressBar" class="bar-fill"></div>
+
+        <div class="trend-metrics">
+          <div class="trend-item">
+            <div class="trend-label-row">
+              <span>Stress Logs</span>
+              <span id="stressHoverValue" class="trend-hover-value">0</span>
+            </div>
+            <div id="stressTrack" class="trend-track" title="Stress Logs: 0">
+              <div id="stressBar" class="trend-fill stress"></div>
+            </div>
           </div>
-          <div class="bar-group">
-            <span>Workouts</span>
-            <div id="workoutBar" class="bar-fill alt"></div>
+
+          <div class="trend-item">
+            <div class="trend-label-row">
+              <span>Workouts</span>
+              <span id="workoutHoverValue" class="trend-hover-value">0</span>
+            </div>
+            <div id="workoutTrack" class="trend-track" title="Workouts: 0">
+              <div id="workoutBar" class="trend-fill workouts"></div>
+            </div>
           </div>
-          <div class="bar-group">
-            <span>Meals</span>
-            <div id="mealBar" class="bar-fill soft"></div>
+
+          <div class="trend-item">
+            <div class="trend-label-row">
+              <span>Meals</span>
+              <span id="mealHoverValue" class="trend-hover-value">0</span>
+            </div>
+            <div id="mealTrack" class="trend-track" title="Meals: 0">
+              <div id="mealBar" class="trend-fill meals"></div>
+            </div>
           </div>
         </div>
       </section>
 
       <div class="toolbar split-links">
-        <button id="generateSummaryBtn">Generate Weekly Summary</button>
+        <button id="latestReportBtn" type="button">Latest Report</button>
         <a class="button-link btn-outline-link" href="./dashboard.html">Back to Dashboard</a>
       </div>
     </section>
