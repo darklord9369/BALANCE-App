@@ -2,9 +2,7 @@ import { DEFAULT_API_BASE_URL } from "./config.js";
 import { getAuth, loadAppState } from "./common.js";
 
 function getApiBaseUrl() {
-  const auth = getAuth();
-  const state = loadAppState();
-  return (auth.apiBaseUrl || state.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+  return DEFAULT_API_BASE_URL.replace(/\/$/, "");
 }
 
 export function setApiBaseUrl(url) {

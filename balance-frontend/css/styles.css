@@ -170,6 +170,32 @@ button, .button-link { border: none; padding: 14px 16px; cursor: pointer; font-w
   justify-content: center;
   text-align: center;
 }
+.summary-bullets {
+  white-space: pre-line;
+  line-height: 1.7;
+}
+
+.status-banner {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.status-info {
+  background: #fff7cc;
+  color: #7a5d00;
+}
+
+.status-success {
+  background: #dff6e5;
+  color: #1f6b3b;
+}
+
+.status-error {
+  background: #fde2e1;
+  color: #a12622;
+}
 
 @media (max-width: 640px) {
   .equal-actions {
