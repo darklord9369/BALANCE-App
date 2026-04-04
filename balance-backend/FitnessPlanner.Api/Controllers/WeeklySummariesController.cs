@@ -39,6 +39,58 @@ public class WeeklySummariesController : ControllerBase
 
             var weekEndDate = weekStartDate.AddDays(6);
 
+            var summary = await _db.WeeklySummaries
+                .FirstOrDefaultAsync(x =>
+                    x.UserId == userId &&
+                    x.WeekStartDate == weekStartDate &&
+                    x.DeletedAt == null);
+
+            var latestWorkoutUpdate = await _db.WorkoutLogs
+                .Where(x =>
+                    x.UserId == userId &&
+                    x.WorkoutDate >= weekStartDate &&
+                    x.WorkoutDate <= weekEndDate)
+                .Select(x => (DateTime?)x.UpdatedAt)
+                .MaxAsync();
+
+            var latestMealUpdate = await _db.MealLogs
+                .Where(x =>
+                    x.UserId == userId &&
+                    x.MealDate >= weekStartDate &&
+                    x.MealDate <= weekEndDate)
+                .Select(x => (DateTime?)x.UpdatedAt)
+                .MaxAsync();
+
+            var latestEventUpdate = await _db.Events
+                .Where(x =>
+                    x.UserId == userId &&
+                    x.StartDate <= weekEndDate &&
+                    x.EndDate >= weekStartDate)
+                .Select(x => (DateTime?)x.UpdatedAt)
+                .MaxAsync();
+
+            DateTime? maxSourceUpdatedAt = new[]
+            {
+                latestWorkoutUpdate,
+                latestMealUpdate,
+                latestEventUpdate
+            }
+            .Where(x => x.HasValue)
+            .DefaultIfEmpty()
+            .Max();
+
+            if (summary != null)
+            {
+                var isFresh =
+                    !maxSourceUpdatedAt.HasValue ||
+                    summary.UpdatedAt >= maxSourceUpdatedAt.Value;
+
+                if (isFresh)
+                {
+                    return Ok(summary);
+                }
+            }
+
             var workouts = await _db.WorkoutLogs
                 .Include(x => x.WorkoutType)
                 .Where(x => x.UserId == userId &&
@@ -63,11 +115,6 @@ public class WeeklySummariesController : ControllerBase
                             x.EndDate >= weekStartDate)
                 .ToListAsync();
 
-            var summary = await _db.WeeklySummaries
-                .FirstOrDefaultAsync(x => x.UserId == userId &&
-                                          x.WeekStartDate == weekStartDate &&
-                                          x.DeletedAt == null);
-
             if (summary == null)
             {
                 summary = new WeeklySummary
@@ -79,11 +126,13 @@ public class WeeklySummariesController : ControllerBase
                 _db.WeeklySummaries.Add(summary);
             }
 
+            summary.WeekEndDate = weekEndDate;
             summary.TotalWorkouts = workouts.Count;
             summary.TotalMealsLogged = meals.Count;
 
             var prompt = BuildWeeklyPrompt(workouts, meals, events);
             summary.SummaryText = await GenerateFitnessReportAsync(apiKey, prompt);
+            summary.UpdatedAt = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
             return Ok(summary);
