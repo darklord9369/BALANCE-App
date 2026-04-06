@@ -8,7 +8,6 @@ import {
 
 import {
   requireAuth,
-  logout,
   getSelectedDate
 } from "./common.js";
 
@@ -16,7 +15,6 @@ const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
 
 const els = {
-  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   latestReportBtn: document.getElementById("latestReportBtn"),
   summaryText: document.getElementById("summaryText"),
@@ -33,8 +31,6 @@ const els = {
   workoutHoverValue: document.getElementById("workoutHoverValue"),
   mealHoverValue: document.getElementById("mealHoverValue")
 };
-
-els.logoutBtn?.addEventListener("click", logout);
 
 function setInsightStatus(message, type = "loading") {
   if (!els.status) return;

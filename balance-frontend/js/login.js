@@ -18,6 +18,12 @@ if (existingAuth?.isLoggedIn) {
   window.location.href = "./dashboard.html";
 }
 
+function showStatus(message, isError = false) {
+  if (!els.status) return;
+  els.status.style.display = "block";
+  setStatus(els.status, message, isError);
+}
+
 els.registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -31,10 +37,10 @@ els.registerForm.addEventListener("submit", async (e) => {
 
     await registerUser(payload);
 
-    setStatus(els.status, "Registration successful. Please log in.");
+    showStatus("Registration successful. Please log in.");
     els.registerForm.reset();
   } catch (error) {
-    setStatus(els.status, error.message || "Registration failed.", true);
+    showStatus(error.message || "Registration failed.", true);
   }
 });
 
@@ -55,9 +61,9 @@ els.loginForm.addEventListener("submit", async (e) => {
       user: data.user
     });
 
-    setStatus(els.status, "Login successful.");
+    showStatus("Login successful.");
     window.location.href = "./dashboard.html";
   } catch (error) {
-    setStatus(els.status, error.message || "Login failed.", true);
+    showStatus(error.message || "Login failed.", true);
   }
 });

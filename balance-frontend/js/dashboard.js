@@ -4,7 +4,8 @@ import {
   getWorkoutLogs,
   getMealLogs,
   getWellnessLogs,
-  generateDailyGuidance
+  generateDailyGuidance,
+  updateCurrentUserProfile
 } from "./api.js";
 
 import {
@@ -19,6 +20,10 @@ import {
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
 
+const LOCAL_KEYS = {
+  mealPreferences: "balance_mealPreferences"
+};
+
 const els = {
   status: document.getElementById("statusMessage"),
   welcomeText: document.getElementById("welcomeText"),
@@ -28,15 +33,38 @@ const els = {
   completedWorkoutList: document.getElementById("completedWorkoutList"),
   completedMealList: document.getElementById("completedMealList"),
   guidanceSummary: document.getElementById("guidanceSummary"),
-  eventCount: document.getElementById("eventCount"),
-  workoutCount: document.getElementById("workoutCount"),
-  mealCount: document.getElementById("mealCount"),
-  wellnessCount: document.getElementById("wellnessCount"),
-  logoutBtn: document.getElementById("logoutBtn"),
-  selectedDate: document.getElementById("selectedDate")
+  selectedDate: document.getElementById("selectedDate"),
+
+  profileMenuBtn: document.getElementById("profileMenuBtn"),
+  profileOverlay: document.getElementById("profileOverlay"),
+  profileMenu: document.getElementById("profileMenu"),
+  closeProfileMenuBtn: document.getElementById("closeProfileMenuBtn"),
+  profileLogoutBtn: document.getElementById("profileLogoutBtn"),
+  openPasswordBtn: document.getElementById("openPasswordBtn"),
+  openMealPrefsBtn: document.getElementById("openMealPrefsBtn"),
+  openBodyStatsBtn: document.getElementById("openBodyStatsBtn"),
+  profilePanelMessage: document.getElementById("profilePanelMessage"),
+
+  passwordForm: document.getElementById("passwordForm"),
+  mealPrefsForm: document.getElementById("mealPrefsForm"),
+  bodyStatsForm: document.getElementById("bodyStatsForm"),
+
+  currentPassword: document.getElementById("currentPassword"),
+  newPassword: document.getElementById("newPassword"),
+  confirmPassword: document.getElementById("confirmPassword"),
+
+  dietType: document.getElementById("dietType"),
+  isGlutenFree: document.getElementById("isGlutenFree"),
+  allergens: document.getElementById("allergens"),
+
+  heightCm: document.getElementById("heightCm"),
+  weightKg: document.getElementById("weightKg"),
+
+  dashboardCard: document.getElementById("dashboardCard"),
+  loadingState: document.getElementById("dashboardLoadingState")
 };
 
-els.logoutBtn?.addEventListener("click", logout);
+let currentUser = null;
 
 function getTodayLocalDate() {
   const now = new Date();
@@ -79,15 +107,18 @@ function parseDateOnly(value) {
   if (!value) return null;
   const parts = value.split("-");
   if (parts.length !== 3) return null;
+
   const year = Number(parts[0]);
   const month = Number(parts[1]) - 1;
   const day = Number(parts[2]);
+
   return new Date(year, month, day);
 }
 
 function isSameDay(dateValue, selectedDateValue) {
   const left = parseDateOnly(normalizeDateInputValue(dateValue));
   const right = parseDateOnly(normalizeDateInputValue(selectedDateValue));
+
   if (!left || !right) return false;
 
   return (
@@ -117,6 +148,15 @@ function formatPlanLines(lines, fallbackText) {
   return lines.map(item => `• ${item}`).join("\n");
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function renderCompletedList(listEl, items, emptyText) {
   if (!listEl) return;
 
@@ -138,15 +178,6 @@ function renderCompletedList(listEl, items, emptyText) {
       `;
     })
     .join("");
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function renderStressLevel(selectedDateValue, wellnessLogs, events) {
@@ -193,7 +224,92 @@ function renderStressLevel(selectedDateValue, wellnessLogs, events) {
   els.stressBadge.className = `badge ${stressClass(label)}`;
 }
 
+function hideAllProfileForms() {
+  [els.passwordForm, els.mealPrefsForm, els.bodyStatsForm].forEach(form => {
+    form?.classList.add("hidden");
+  });
+}
+
+function showProfileForm(form) {
+  hideAllProfileForms();
+  form?.classList.remove("hidden");
+}
+
+function showProfileMessage(message, isError = false) {
+  if (!els.profilePanelMessage) return;
+
+  els.profilePanelMessage.textContent = message;
+  els.profilePanelMessage.classList.remove("hidden", "success", "error");
+  els.profilePanelMessage.classList.add(isError ? "error" : "success");
+}
+
+function hideProfileMessage() {
+  if (!els.profilePanelMessage) return;
+
+  els.profilePanelMessage.textContent = "";
+  els.profilePanelMessage.classList.add("hidden");
+  els.profilePanelMessage.classList.remove("success", "error");
+}
+
+function openProfileMenu() {
+  els.profileOverlay?.classList.remove("hidden");
+  els.profileMenuBtn?.setAttribute("aria-expanded", "true");
+  hideProfileMessage();
+  hideAllProfileForms();
+}
+
+function closeProfileMenu() {
+  els.profileOverlay?.classList.add("hidden");
+  els.profileMenuBtn?.setAttribute("aria-expanded", "false");
+  hideProfileMessage();
+  hideAllProfileForms();
+}
+
+function getStoredMealPreferences() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_KEYS.mealPreferences) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredMealPreferences(preferences) {
+  localStorage.setItem(LOCAL_KEYS.mealPreferences, JSON.stringify(preferences || {}));
+}
+
+function fillMealPreferenceForm() {
+  const saved = getStoredMealPreferences();
+
+  if (els.dietType) els.dietType.value = saved.dietType || "";
+  if (els.isGlutenFree) els.isGlutenFree.value = saved.isGlutenFree || "";
+  if (els.allergens) els.allergens.value = saved.allergens || "";
+}
+
+function fillBodyStatsForm(user) {
+  const profile = user?.profile || user?.Profile || {};
+
+  if (els.heightCm) {
+    els.heightCm.value = profile.heightCm ?? profile.HeightCm ?? "";
+  }
+
+  if (els.weightKg) {
+    els.weightKg.value = profile.weightKg ?? profile.WeightKg ?? "";
+  }
+}
+
+function showDashboardLoader() {
+  els.loadingState?.classList.remove("hidden");
+  els.dashboardCard?.classList.add("dashboard-card-hidden");
+}
+
+function hideDashboardLoader() {
+  els.loadingState?.classList.add("hidden");
+  els.dashboardCard?.classList.remove("dashboard-card-hidden");
+}
+
 async function loadDashboard() {
+  showDashboardLoader();
+
   try {
     const selectedDateValue = ensureSelectedDate();
 
@@ -207,6 +323,8 @@ async function loadDashboard() {
       getWellnessLogs(),
       generateDailyGuidance(selectedDateValue)
     ]);
+
+    currentUser = user;
 
     const firstName =
       user?.firstName ||
@@ -244,10 +362,15 @@ async function loadDashboard() {
       guidance?.summary ||
       "Your guidance is based on your selected date, recent logs, and upcoming events.";
 
+    fillMealPreferenceForm();
+    fillBodyStatsForm(user);
+
     setStatus(els.status, "Dashboard loaded.", false);
   } catch (error) {
     console.error(error);
     setStatus(els.status, error.message || "Unable to load dashboard.", true);
+  } finally {
+    hideDashboardLoader();
   }
 }
 
@@ -258,17 +381,12 @@ function initSelectedDate() {
     els.selectedDate.addEventListener("change", async event => {
       const newDate = event.target.value;
       if (!newDate) return;
+
       saveSelectedDate(newDate);
       await loadDashboard();
     });
   }
 }
-
-window.addEventListener("storage", event => {
-  if (event.key === "dashboardNeedsRefresh") {
-    loadDashboard();
-  }
-});
 
 function initCompletedPopovers() {
   const toggleButtons = document.querySelectorAll(".history-toggle");
@@ -296,6 +414,123 @@ function initCompletedPopovers() {
   });
 }
 
+function initProfileMenu() {
+  els.profileMenuBtn?.addEventListener("click", event => {
+    event.stopPropagation();
+    openProfileMenu();
+  });
+
+  els.closeProfileMenuBtn?.addEventListener("click", () => {
+    closeProfileMenu();
+  });
+
+  els.profileOverlay?.addEventListener("click", event => {
+    if (event.target === els.profileOverlay) {
+      closeProfileMenu();
+    }
+  });
+
+  els.profileMenu?.addEventListener("click", event => {
+    event.stopPropagation();
+  });
+
+  els.profileLogoutBtn?.addEventListener("click", () => {
+    logout();
+  });
+
+  els.openPasswordBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    showProfileForm(els.passwordForm);
+  });
+
+  els.openMealPrefsBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    fillMealPreferenceForm();
+    showProfileForm(els.mealPrefsForm);
+  });
+
+  els.openBodyStatsBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    fillBodyStatsForm(currentUser);
+    showProfileForm(els.bodyStatsForm);
+  });
+
+  els.passwordForm?.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const currentPassword = els.currentPassword?.value?.trim() || "";
+    const newPassword = els.newPassword?.value?.trim() || "";
+    const confirmPassword = els.confirmPassword?.value?.trim() || "";
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showProfileMessage("Please fill in all password fields.", true);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showProfileMessage("New password and confirm password do not match.", true);
+      return;
+    }
+
+    showProfileMessage("Change password is not connected to the backend yet.", true);
+  });
+
+  els.mealPrefsForm?.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const preferences = {
+      dietType: els.dietType?.value || "",
+      isGlutenFree: els.isGlutenFree?.value || "",
+      allergens: els.allergens?.value?.trim() || ""
+    };
+
+    saveStoredMealPreferences(preferences);
+    showProfileMessage("Meal preferences saved.");
+  });
+
+  els.bodyStatsForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    try {
+      const heightValue = els.heightCm?.value?.trim() || "";
+      const weightValue = els.weightKg?.value?.trim() || "";
+
+      await updateCurrentUserProfile({
+        heightCm: heightValue ? Number(heightValue) : null,
+        weightKg: weightValue ? Number(weightValue) : null
+      });
+
+      if (!currentUser) currentUser = {};
+      if (!currentUser.profile) currentUser.profile = {};
+
+      currentUser.profile.heightCm = heightValue ? Number(heightValue) : null;
+      currentUser.profile.weightKg = weightValue ? Number(weightValue) : null;
+
+      showProfileMessage("Body stats updated.");
+    } catch (error) {
+      console.error(error);
+      showProfileMessage(error.message || "Failed to update body stats.", true);
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (
+      event.key === "Escape" &&
+      els.profileOverlay &&
+      !els.profileOverlay.classList.contains("hidden")
+    ) {
+      closeProfileMenu();
+    }
+  });
+}
+
+window.addEventListener("storage", event => {
+  if (event.key === "dashboardNeedsRefresh") {
+    loadDashboard();
+  }
+});
+
 initCompletedPopovers();
 initSelectedDate();
+initProfileMenu();
 loadDashboard();

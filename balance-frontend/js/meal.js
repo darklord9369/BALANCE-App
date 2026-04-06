@@ -4,7 +4,7 @@ import {
   getMealLogById,
   updateMealLog
 } from "./api.js";
-import { setStatus, requireAuth, logout, getSelectedDate } from "./common.js";
+import { setStatus, requireAuth, getSelectedDate } from "./common.js";
 
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
@@ -14,7 +14,6 @@ const editId = params.get("edit");
 const returnTo = params.get("returnTo") || "meal-entries";
 
 const els = {
-  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   pageTitle: document.getElementById("pageTitle"),
   submitBtn: document.getElementById("submitBtn"),
@@ -26,7 +25,6 @@ const els = {
   notes: document.getElementById("notes")
 };
 
-els.logoutBtn?.addEventListener("click", logout);
 els.backToEntriesLink.href = `./${returnTo}.html`;
 
 function setDefaults() {
