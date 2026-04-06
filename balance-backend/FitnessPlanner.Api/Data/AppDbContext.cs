@@ -23,7 +23,7 @@ public class AppDbContext : DbContext
     public DbSet<Integration> Integrations => Set<Integration>();
     public DbSet<SummaryEvent> SummaryEvents => Set<SummaryEvent>();
     public DbSet<RecommendationEventLink> RecommendationEventLinks => Set<RecommendationEventLink>();
-
+    public DbSet<DailyGuidance> DailyGuidances => Set<DailyGuidance>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -67,66 +67,66 @@ public class AppDbContext : DbContext
     entity.ToTable(t => t.HasCheckConstraint("CK_Event_EndDate", @"""EndDate"" >= ""StartDate"""));
 });
 
-modelBuilder.Entity<WorkoutType>(entity =>
-{
-    entity.HasKey(x => x.WorkoutTypeId);
-    entity.HasIndex(x => x.Name).IsUnique();
-});
+        modelBuilder.Entity<WorkoutType>(entity =>
+        {
+            entity.HasKey(x => x.WorkoutTypeId);
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
 
-modelBuilder.Entity<WorkoutLog>(entity =>
-{
-    entity.HasKey(x => x.WorkoutLogId);
-    entity.HasOne(x => x.User)
-        .WithMany(x => x.WorkoutLogs)
-        .HasForeignKey(x => x.UserId)
-        .OnDelete(DeleteBehavior.Cascade);
-    entity.HasOne(x => x.WorkoutType)
-        .WithMany(x => x.WorkoutLogs)
-        .HasForeignKey(x => x.WorkoutTypeId)
-        .OnDelete(DeleteBehavior.Restrict);
-    entity.HasOne(x => x.Event)
-        .WithMany()
-        .HasForeignKey(x => x.EventId)
-        .OnDelete(DeleteBehavior.SetNull);
-    entity.ToTable(t => t.HasCheckConstraint("CK_WorkoutLog_DurationMinutes", @"""DurationMinutes"" IS NULL OR ""DurationMinutes"" >= 0"));
-    entity.ToTable(t => t.HasCheckConstraint("CK_WorkoutLog_EffortScore", @"""EffortScore"" IS NULL OR ""EffortScore"" BETWEEN 1 AND 10"));
-});
+        modelBuilder.Entity<WorkoutLog>(entity =>
+        {
+            entity.HasKey(x => x.WorkoutLogId);
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.WorkoutLogs)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.WorkoutType)
+                .WithMany(x => x.WorkoutLogs)
+                .HasForeignKey(x => x.WorkoutTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Event)
+                .WithMany()
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.ToTable(t => t.HasCheckConstraint("CK_WorkoutLog_DurationMinutes", @"""DurationMinutes"" IS NULL OR ""DurationMinutes"" >= 0"));
+            entity.ToTable(t => t.HasCheckConstraint("CK_WorkoutLog_EffortScore", @"""EffortScore"" IS NULL OR ""EffortScore"" BETWEEN 1 AND 10"));
+        });
 
-modelBuilder.Entity<MealCategory>(entity =>
-{
-    entity.HasKey(x => x.MealCategoryId);
-    entity.HasIndex(x => x.Name).IsUnique();
-});
+        modelBuilder.Entity<MealCategory>(entity =>
+        {
+            entity.HasKey(x => x.MealCategoryId);
+            entity.HasIndex(x => x.Name).IsUnique();
+        });
 
-modelBuilder.Entity<MealLog>(entity =>
-{
-    entity.HasKey(x => x.MealLogId);
-    entity.HasOne(x => x.User)
-        .WithMany(x => x.MealLogs)
-        .HasForeignKey(x => x.UserId)
-        .OnDelete(DeleteBehavior.Cascade);
-    entity.HasOne(x => x.MealCategory)
-        .WithMany(x => x.MealLogs)
-        .HasForeignKey(x => x.MealCategoryId)
-        .OnDelete(DeleteBehavior.Restrict);
-    entity.HasOne(x => x.Event)
-        .WithMany()
-        .HasForeignKey(x => x.EventId)
-        .OnDelete(DeleteBehavior.SetNull);
-});
+        modelBuilder.Entity<MealLog>(entity =>
+        {
+            entity.HasKey(x => x.MealLogId);
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.MealLogs)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(x => x.MealCategory)
+                .WithMany(x => x.MealLogs)
+                .HasForeignKey(x => x.MealCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(x => x.Event)
+                .WithMany()
+                .HasForeignKey(x => x.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
-modelBuilder.Entity<WellnessLog>(entity =>
-{
-    entity.HasKey(x => x.WellnessLogId);
-    entity.HasIndex(x => new { x.UserId, x.LogDate }).IsUnique();
-    entity.HasOne(x => x.User)
-        .WithMany(x => x.WellnessLogs)
-        .HasForeignKey(x => x.UserId)
-        .OnDelete(DeleteBehavior.Cascade);
-    entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_EnergyLevel", @"""EnergyLevel"" BETWEEN 1 AND 10"));
-    entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_StressLevel", @"""StressLevel"" BETWEEN 1 AND 10"));
-    entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_RecoveryLevel", @"""RecoveryLevel"" BETWEEN 1 AND 10"));
-});
+        modelBuilder.Entity<WellnessLog>(entity =>
+        {
+            entity.HasKey(x => x.WellnessLogId);
+            entity.HasIndex(x => new { x.UserId, x.LogDate }).IsUnique();
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.WellnessLogs)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_EnergyLevel", @"""EnergyLevel"" BETWEEN 1 AND 10"));
+            entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_StressLevel", @"""StressLevel"" BETWEEN 1 AND 10"));
+            entity.ToTable(t => t.HasCheckConstraint("CK_WellnessLog_RecoveryLevel", @"""RecoveryLevel"" BETWEEN 1 AND 10"));
+        });
         modelBuilder.Entity<WeeklySummary>(entity =>
         {
             entity.HasKey(x => x.WeeklySummaryId);
@@ -154,6 +154,26 @@ modelBuilder.Entity<WellnessLog>(entity =>
             entity.HasKey(x => x.RecommendationEventLinkId);
             entity.HasIndex(x => new { x.RecommendationId, x.EventId }).IsUnique();
         });
+        
+        modelBuilder.Entity<DailyGuidance>(entity =>
+{
+    entity.HasKey(x => x.DailyGuidanceId);
+
+    entity.HasIndex(x => new { x.UserId, x.GuidanceDate }).IsUnique();
+
+    entity.Property(x => x.InitialWorkoutPlanJson).HasColumnType("text");
+    entity.Property(x => x.CurrentWorkoutPlanJson).HasColumnType("text");
+    entity.Property(x => x.InitialMealPlanJson).HasColumnType("text");
+    entity.Property(x => x.CurrentMealPlanJson).HasColumnType("text");
+    entity.Property(x => x.CompletedWorkoutsJson).HasColumnType("text");
+    entity.Property(x => x.CompletedMealsJson).HasColumnType("text");
+    entity.Property(x => x.SummaryText).HasColumnType("text");
+
+    entity.HasOne(x => x.User)
+        .WithMany()
+        .HasForeignKey(x => x.UserId)
+        .OnDelete(DeleteBehavior.Cascade);
+});
     }
 
     public override int SaveChanges()

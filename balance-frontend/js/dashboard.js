@@ -3,7 +3,9 @@ import {
   getEvents,
   getWorkoutLogs,
   getMealLogs,
-  getWellnessLogs
+  getWellnessLogs,
+  generateDailyGuidance,
+  updateCurrentUserProfile
 } from "./api.js";
 
 import {
@@ -18,184 +20,517 @@ import {
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
 
+const LOCAL_KEYS = {
+  mealPreferences: "balance_mealPreferences"
+};
+
 const els = {
   status: document.getElementById("statusMessage"),
   welcomeText: document.getElementById("welcomeText"),
   stressBadge: document.getElementById("stressBadge"),
   workoutSuggestion: document.getElementById("workoutSuggestion"),
   mealSuggestion: document.getElementById("mealSuggestion"),
-  eventCount: document.getElementById("eventCount"),
-  workoutCount: document.getElementById("workoutCount"),
-  mealCount: document.getElementById("mealCount"),
-  wellnessCount: document.getElementById("wellnessCount"),
-  logoutBtn: document.getElementById("logoutBtn"),
-  selectedDate: document.getElementById("selectedDate")
+  completedWorkoutList: document.getElementById("completedWorkoutList"),
+  completedMealList: document.getElementById("completedMealList"),
+  guidanceSummary: document.getElementById("guidanceSummary"),
+  selectedDate: document.getElementById("selectedDate"),
+
+  profileMenuBtn: document.getElementById("profileMenuBtn"),
+  profileOverlay: document.getElementById("profileOverlay"),
+  profileMenu: document.getElementById("profileMenu"),
+  closeProfileMenuBtn: document.getElementById("closeProfileMenuBtn"),
+  profileLogoutBtn: document.getElementById("profileLogoutBtn"),
+  openPasswordBtn: document.getElementById("openPasswordBtn"),
+  openMealPrefsBtn: document.getElementById("openMealPrefsBtn"),
+  openBodyStatsBtn: document.getElementById("openBodyStatsBtn"),
+  profilePanelMessage: document.getElementById("profilePanelMessage"),
+
+  passwordForm: document.getElementById("passwordForm"),
+  mealPrefsForm: document.getElementById("mealPrefsForm"),
+  bodyStatsForm: document.getElementById("bodyStatsForm"),
+
+  currentPassword: document.getElementById("currentPassword"),
+  newPassword: document.getElementById("newPassword"),
+  confirmPassword: document.getElementById("confirmPassword"),
+
+  dietType: document.getElementById("dietType"),
+  isGlutenFree: document.getElementById("isGlutenFree"),
+  allergens: document.getElementById("allergens"),
+
+  heightCm: document.getElementById("heightCm"),
+  weightKg: document.getElementById("weightKg"),
+
+  dashboardCard: document.getElementById("dashboardCard"),
+  loadingState: document.getElementById("dashboardLoadingState")
 };
 
-els.logoutBtn?.addEventListener("click", logout);
+let currentUser = null;
 
-function syncSelectedDateInput() {
+function getTodayLocalDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function ensureSelectedDate() {
+  let selectedDateValue = getSelectedDate();
+
+  if (
+    !selectedDateValue ||
+    typeof selectedDateValue !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(selectedDateValue)
+  ) {
+    selectedDateValue = getTodayLocalDate();
+    saveSelectedDate(selectedDateValue);
+  }
+
   if (els.selectedDate) {
-    els.selectedDate.value = getSelectedDate();
-  }
-}
-
-if (els.selectedDate) {
-  syncSelectedDateInput();
-
-  els.selectedDate.addEventListener("change", async () => {
-    const newDate = els.selectedDate.value || getSelectedDate();
-    saveSelectedDate(newDate);
-    syncSelectedDateInput();
-    await loadDashboard();
-  });
-}
-
-function buildWorkoutGuidance(stressText, latestWellness) {
-  const s = String(stressText || "").toLowerCase();
-  const energy = latestWellness?.energyLevel ?? null;
-  const sleepHours = latestWellness?.sleepHours ?? null;
-
-  if (s.includes("high") || (sleepHours !== null && sleepHours < 6)) {
-    return "Active recovery: 20-30 minute walk or easy mobility.";
+    els.selectedDate.value = selectedDateValue;
   }
 
-  if (energy !== null && energy >= 8) {
-    return "You look ready for a moderate workout session today.";
-  }
-
-  return "Balanced day: short run, brisk walk, or light lifting.";
+  return selectedDateValue;
 }
 
-function buildMealGuidance(stressText, latestWellness) {
-  const s = String(stressText || "").toLowerCase();
-
-  if (s.includes("high")) {
-    return "Complex carbs + protein. Keep meals steady and avoid skipping.";
-  }
-
-  if ((latestWellness?.recoveryLevel ?? 0) <= 4) {
-    return "Prioritize recovery foods with protein, fluids, and a balanced meal.";
-  }
-
-  return "Balanced meal with carbs, protein, and hydration.";
+function normalizeDateInputValue(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
-function getDisplayName(user) {
-  if (user?.firstName) return user.firstName;
-  if (user?.email) return user.email;
-  if (auth?.userName) return auth.userName;
-  return `User ${auth.userId}`;
+function parseDateOnly(value) {
+  if (!value) return null;
+  const parts = value.split("-");
+  if (parts.length !== 3) return null;
+
+  const year = Number(parts[0]);
+  const month = Number(parts[1]) - 1;
+  const day = Number(parts[2]);
+
+  return new Date(year, month, day);
 }
 
-function deriveStressText(nearestEvent, latestWellness) {
-  if (nearestEvent?.stressLevel) return nearestEvent.stressLevel;
+function isSameDay(dateValue, selectedDateValue) {
+  const left = parseDateOnly(normalizeDateInputValue(dateValue));
+  const right = parseDateOnly(normalizeDateInputValue(selectedDateValue));
 
-  if (latestWellness?.stressLevel != null) {
-    const s = latestWellness.stressLevel;
-    if (s >= 7) return "High";
-    if (s >= 4) return "Medium";
-  }
+  if (!left || !right) return false;
 
-  return "Low";
+  return (
+    left.getFullYear() === right.getFullYear() &&
+    left.getMonth() === right.getMonth() &&
+    left.getDate() === right.getDate()
+  );
 }
 
-function isSameDate(value, selectedDate) {
-  return String(value || "").slice(0, 10) === selectedDate;
-}
+function isEventActiveOnDate(event, selectedDateValue) {
+  const selected = parseDateOnly(selectedDateValue);
+  if (!selected) return false;
 
-function isEventActiveOnDate(event, selectedDate) {
-  const start = String(event?.startDate || "").slice(0, 10);
-  const end = String(event?.endDate || "").slice(0, 10);
+  const start = parseDateOnly(normalizeDateInputValue(event.startDate));
+  const end = parseDateOnly(normalizeDateInputValue(event.endDate));
 
   if (!start || !end) return false;
 
-  return start <= selectedDate && end >= selectedDate;
+  return selected >= start && selected <= end;
+}
+
+function formatPlanLines(lines, fallbackText) {
+  if (!Array.isArray(lines) || lines.length === 0) {
+    return fallbackText;
+  }
+
+  return lines.map(item => `• ${item}`).join("\n");
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderCompletedList(listEl, items, emptyText) {
+  if (!listEl) return;
+
+  if (!Array.isArray(items) || items.length === 0) {
+    listEl.innerHTML = `<li class="empty-state">${escapeHtml(emptyText)}</li>`;
+    return;
+  }
+
+  listEl.innerHTML = items
+    .map(item => {
+      const title = item.title || "Completed item";
+      const meta = item.timeLabel || item.typeLabel || "Logged today";
+
+      return `
+        <li class="completed-mini-item">
+          <span class="completed-mini-name">${escapeHtml(title)}</span>
+          <span class="completed-mini-meta">${escapeHtml(meta)}</span>
+        </li>
+      `;
+    })
+    .join("");
+}
+
+function renderStressLevel(selectedDateValue, wellnessLogs, events) {
+  const activeEvents = Array.isArray(events)
+    ? events.filter(event => isEventActiveOnDate(event, selectedDateValue))
+    : [];
+
+  if (activeEvents.length === 0) {
+    els.stressBadge.textContent = "Low";
+    els.stressBadge.className = "badge badge-low";
+    return;
+  }
+
+  if (!Array.isArray(wellnessLogs) || wellnessLogs.length === 0) {
+    els.stressBadge.textContent = "Medium";
+    els.stressBadge.className = "badge badge-medium";
+    return;
+  }
+
+  const selectedDayLogs = wellnessLogs.filter(log =>
+    isSameDay(log.logDate || log.date, selectedDateValue)
+  );
+
+  if (selectedDayLogs.length === 0) {
+    els.stressBadge.textContent = "Medium";
+    els.stressBadge.className = "badge badge-medium";
+    return;
+  }
+
+  const latest = selectedDayLogs[0];
+  const stressValue = latest?.stressLevel;
+
+  let label = "Medium";
+
+  if (typeof stressValue === "number") {
+    if (stressValue <= 3) label = "Low";
+    else if (stressValue <= 6) label = "Medium";
+    else label = "High";
+  } else if (typeof stressValue === "string") {
+    label = stressValue;
+  }
+
+  els.stressBadge.textContent = label;
+  els.stressBadge.className = `badge ${stressClass(label)}`;
+}
+
+function hideAllProfileForms() {
+  [els.passwordForm, els.mealPrefsForm, els.bodyStatsForm].forEach(form => {
+    form?.classList.add("hidden");
+  });
+}
+
+function showProfileForm(form) {
+  hideAllProfileForms();
+  form?.classList.remove("hidden");
+}
+
+function showProfileMessage(message, isError = false) {
+  if (!els.profilePanelMessage) return;
+
+  els.profilePanelMessage.textContent = message;
+  els.profilePanelMessage.classList.remove("hidden", "success", "error");
+  els.profilePanelMessage.classList.add(isError ? "error" : "success");
+}
+
+function hideProfileMessage() {
+  if (!els.profilePanelMessage) return;
+
+  els.profilePanelMessage.textContent = "";
+  els.profilePanelMessage.classList.add("hidden");
+  els.profilePanelMessage.classList.remove("success", "error");
+}
+
+function openProfileMenu() {
+  els.profileOverlay?.classList.remove("hidden");
+  els.profileMenuBtn?.setAttribute("aria-expanded", "true");
+  hideProfileMessage();
+  hideAllProfileForms();
+}
+
+function closeProfileMenu() {
+  els.profileOverlay?.classList.add("hidden");
+  els.profileMenuBtn?.setAttribute("aria-expanded", "false");
+  hideProfileMessage();
+  hideAllProfileForms();
+}
+
+function getStoredMealPreferences() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_KEYS.mealPreferences) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredMealPreferences(preferences) {
+  localStorage.setItem(LOCAL_KEYS.mealPreferences, JSON.stringify(preferences || {}));
+}
+
+function fillMealPreferenceForm() {
+  const saved = getStoredMealPreferences();
+
+  if (els.dietType) els.dietType.value = saved.dietType || "";
+  if (els.isGlutenFree) els.isGlutenFree.value = saved.isGlutenFree || "";
+  if (els.allergens) els.allergens.value = saved.allergens || "";
+}
+
+function fillBodyStatsForm(user) {
+  const profile = user?.profile || user?.Profile || {};
+
+  if (els.heightCm) {
+    els.heightCm.value = profile.heightCm ?? profile.HeightCm ?? "";
+  }
+
+  if (els.weightKg) {
+    els.weightKg.value = profile.weightKg ?? profile.WeightKg ?? "";
+  }
+}
+
+function showDashboardLoader() {
+  els.loadingState?.classList.remove("hidden");
+  els.dashboardCard?.classList.add("dashboard-card-hidden");
+}
+
+function hideDashboardLoader() {
+  els.loadingState?.classList.add("hidden");
+  els.dashboardCard?.classList.remove("dashboard-card-hidden");
 }
 
 async function loadDashboard() {
+  showDashboardLoader();
+
   try {
-    const selectedDate = getSelectedDate();
-    syncSelectedDateInput();
+    const selectedDateValue = ensureSelectedDate();
 
-    setStatus(els.status, "Loading dashboard...");
+    setStatus(els.status, "Loading dashboard guidance...");
 
-    const [user, events, workouts, meals, wellness] = await Promise.all([
+    const [user, events, workoutLogs, mealLogs, wellnessLogs, guidance] = await Promise.all([
       getCurrentUser(),
       getEvents(),
       getWorkoutLogs(),
       getMealLogs(),
-      getWellnessLogs()
+      getWellnessLogs(),
+      generateDailyGuidance(selectedDateValue)
     ]);
 
-    const userEvents = events || [];
-    const userWorkouts = workouts || [];
-    const userMeals = meals || [];
-    const userWellness = wellness || [];
+    currentUser = user;
 
-    const dayEvents = userEvents.filter((event) =>
-      isEventActiveOnDate(event, selectedDate)
+    const firstName =
+      user?.firstName ||
+      user?.FirstName ||
+      auth?.userName ||
+      "User";
+
+    els.welcomeText.textContent = `Welcome, ${firstName}!`;
+
+    renderStressLevel(selectedDateValue, wellnessLogs, events);
+
+    els.workoutSuggestion.textContent = formatPlanLines(
+      guidance?.workout?.currentPlan,
+      "No workout guidance available."
     );
 
-    const dayWorkouts = userWorkouts.filter((workout) =>
-      isSameDate(workout.workoutDate, selectedDate)
+    els.mealSuggestion.textContent = formatPlanLines(
+      guidance?.meals?.currentPlan,
+      "No meal guidance available."
     );
 
-    const dayMeals = userMeals.filter((meal) =>
-      isSameDate(meal.mealDate, selectedDate)
+    renderCompletedList(
+      els.completedWorkoutList,
+      guidance?.workout?.completed,
+      "No workouts logged yet."
     );
 
-    const dayWellness = userWellness.filter((entry) =>
-      isSameDate(entry.logDate, selectedDate)
+    renderCompletedList(
+      els.completedMealList,
+      guidance?.meals?.completed,
+      "No meals logged yet."
     );
 
-    const nearestEvent = [...dayEvents].sort(
-      (a, b) => new Date(a.startDate || 0) - new Date(b.startDate || 0)
-    )[0];
+    els.guidanceSummary.textContent =
+      guidance?.summary ||
+      "Your guidance is based on your selected date, recent logs, and upcoming events.";
 
-    const latestWellness = [...dayWellness].sort(
-      (a, b) => new Date(b.logDate || 0) - new Date(a.logDate || 0)
-    )[0];
+    fillMealPreferenceForm();
+    fillBodyStatsForm(user);
 
-    const stressText = deriveStressText(nearestEvent, latestWellness);
-
-    if (els.welcomeText) {
-      els.welcomeText.textContent = `Welcome, ${getDisplayName(user)}!`;
-    }
-
-    if (els.stressBadge) {
-      els.stressBadge.textContent = stressText;
-      els.stressBadge.className = `badge ${stressClass(stressText)}`;
-    }
-
-    if (els.workoutSuggestion) {
-      els.workoutSuggestion.textContent = buildWorkoutGuidance(stressText, latestWellness);
-    }
-
-    if (els.mealSuggestion) {
-      els.mealSuggestion.textContent = buildMealGuidance(stressText, latestWellness);
-    }
-
-    if (els.eventCount) {
-      els.eventCount.textContent = dayEvents.length;
-    }
-
-    if (els.workoutCount) {
-      els.workoutCount.textContent = dayWorkouts.length;
-    }
-
-    if (els.mealCount) {
-      els.mealCount.textContent = dayMeals.length;
-    }
-
-    if (els.wellnessCount) {
-      els.wellnessCount.textContent = dayWellness.length;
-    }
-
-    setStatus(els.status, "Dashboard loaded.");
+    setStatus(els.status, "Dashboard loaded.", false);
   } catch (error) {
-    setStatus(els.status, error.message || "Failed to load dashboard.", true);
+    console.error(error);
+    setStatus(els.status, error.message || "Unable to load dashboard.", true);
+  } finally {
+    hideDashboardLoader();
   }
 }
 
+function initSelectedDate() {
+  ensureSelectedDate();
+
+  if (els.selectedDate) {
+    els.selectedDate.addEventListener("change", async event => {
+      const newDate = event.target.value;
+      if (!newDate) return;
+
+      saveSelectedDate(newDate);
+      await loadDashboard();
+    });
+  }
+}
+
+function initCompletedPopovers() {
+  const toggleButtons = document.querySelectorAll(".history-toggle");
+
+  toggleButtons.forEach(button => {
+    button.addEventListener("click", event => {
+      event.stopPropagation();
+
+      const targetId = button.dataset.target;
+      const popover = document.getElementById(targetId);
+      if (!popover) return;
+
+      document.querySelectorAll(".completed-popover.open").forEach(el => {
+        if (el !== popover) el.classList.remove("open");
+      });
+
+      popover.classList.toggle("open");
+    });
+  });
+
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".completed-popover.open").forEach(el => {
+      el.classList.remove("open");
+    });
+  });
+}
+
+function initProfileMenu() {
+  els.profileMenuBtn?.addEventListener("click", event => {
+    event.stopPropagation();
+    openProfileMenu();
+  });
+
+  els.closeProfileMenuBtn?.addEventListener("click", () => {
+    closeProfileMenu();
+  });
+
+  els.profileOverlay?.addEventListener("click", event => {
+    if (event.target === els.profileOverlay) {
+      closeProfileMenu();
+    }
+  });
+
+  els.profileMenu?.addEventListener("click", event => {
+    event.stopPropagation();
+  });
+
+  els.profileLogoutBtn?.addEventListener("click", () => {
+    logout();
+  });
+
+  els.openPasswordBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    showProfileForm(els.passwordForm);
+  });
+
+  els.openMealPrefsBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    fillMealPreferenceForm();
+    showProfileForm(els.mealPrefsForm);
+  });
+
+  els.openBodyStatsBtn?.addEventListener("click", () => {
+    hideProfileMessage();
+    fillBodyStatsForm(currentUser);
+    showProfileForm(els.bodyStatsForm);
+  });
+
+  els.passwordForm?.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const currentPassword = els.currentPassword?.value?.trim() || "";
+    const newPassword = els.newPassword?.value?.trim() || "";
+    const confirmPassword = els.confirmPassword?.value?.trim() || "";
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showProfileMessage("Please fill in all password fields.", true);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showProfileMessage("New password and confirm password do not match.", true);
+      return;
+    }
+
+    showProfileMessage("Change password is not connected to the backend yet.", true);
+  });
+
+  els.mealPrefsForm?.addEventListener("submit", event => {
+    event.preventDefault();
+
+    const preferences = {
+      dietType: els.dietType?.value || "",
+      isGlutenFree: els.isGlutenFree?.value || "",
+      allergens: els.allergens?.value?.trim() || ""
+    };
+
+    saveStoredMealPreferences(preferences);
+    showProfileMessage("Meal preferences saved.");
+  });
+
+  els.bodyStatsForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    try {
+      const heightValue = els.heightCm?.value?.trim() || "";
+      const weightValue = els.weightKg?.value?.trim() || "";
+
+      await updateCurrentUserProfile({
+        heightCm: heightValue ? Number(heightValue) : null,
+        weightKg: weightValue ? Number(weightValue) : null
+      });
+
+      if (!currentUser) currentUser = {};
+      if (!currentUser.profile) currentUser.profile = {};
+
+      currentUser.profile.heightCm = heightValue ? Number(heightValue) : null;
+      currentUser.profile.weightKg = weightValue ? Number(weightValue) : null;
+
+      showProfileMessage("Body stats updated.");
+    } catch (error) {
+      console.error(error);
+      showProfileMessage(error.message || "Failed to update body stats.", true);
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (
+      event.key === "Escape" &&
+      els.profileOverlay &&
+      !els.profileOverlay.classList.contains("hidden")
+    ) {
+      closeProfileMenu();
+    }
+  });
+}
+
+window.addEventListener("storage", event => {
+  if (event.key === "dashboardNeedsRefresh") {
+    loadDashboard();
+  }
+});
+
+initCompletedPopovers();
+initSelectedDate();
+initProfileMenu();
 loadDashboard();

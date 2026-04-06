@@ -1,17 +1,16 @@
 import { getEvents, deleteEvent } from "./api.js";
-import { requireAuth, logout, setStatus, getSelectedDate } from "./common.js";
+import { requireAuth, setStatus, getSelectedDate } from "./common.js";
 
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
 
 const els = {
-  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   selectedDateDisplay: document.getElementById("selectedDateDisplay"),
-  tableBody: document.getElementById("eventTableBody")
+  tableBody: document.getElementById("eventTableBody"),
+  tableHead: document.querySelector(".entry-table thead")
 };
 
-els.logoutBtn?.addEventListener("click", logout);
 
 function isEventActiveOnDate(event, selectedDate) {
   const start = String(event?.startDate || "").slice(0, 10);
@@ -24,12 +23,20 @@ function isEventActiveOnDate(event, selectedDate) {
 
 function renderRows(items) {
   if (!items.length) {
+    if (els.tableHead) {
+      els.tableHead.style.display = "none";
+    }
+
     els.tableBody.innerHTML = `
       <tr>
-        <td colspan="4">No events found for this day.</td>
+        <td colspan="4" class="empty-state-cell">No events found for this day.</td>
       </tr>
     `;
     return;
+  }
+
+  if (els.tableHead) {
+    els.tableHead.style.display = "";
   }
 
   els.tableBody.innerHTML = items.map((item) => `

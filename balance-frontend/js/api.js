@@ -2,7 +2,9 @@ import { DEFAULT_API_BASE_URL } from "./config.js";
 import { getAuth, loadAppState } from "./common.js";
 
 function getApiBaseUrl() {
-  return DEFAULT_API_BASE_URL.replace(/\/$/, "");
+  const auth = getAuth();
+  const state = loadAppState();
+  return (auth.apiBaseUrl || state.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/$/, "");
 }
 
 export function setApiBaseUrl(url) {
@@ -217,6 +219,15 @@ export const generateWeeklySummary = (userId, weekStartDate) => {
     {
       method: "POST"
     }
+  );
+};
+
+// Daily Guidance
+export const generateDailyGuidance = (selectedDate) => {
+  if (!selectedDate) throw new Error("Selected date is required.");
+  return request(
+    `/api/DailyGuidance/generate?selectedDate=${encodeURIComponent(selectedDate)}`,
+    { method: "POST" }
   );
 };
 

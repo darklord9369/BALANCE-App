@@ -8,47 +8,105 @@
 </head>
 <body>
   <main class="app-shell">
-    <section class="screen-card">
+    <div id="dashboardLoadingState" class="dashboard-loading-state">
+      <div class="dashboard-loading-box">
+        <div class="dashboard-loading-spinner"></div>
+        <div class="dashboard-loading-text">Loading your dashboard...</div>
+      </div>
+    </div>
+
+    <section id="dashboardCard" class="screen-card">
       <div class="screen-header">
         <div class="topbar">
-          <button id="logoutBtn">Logout</button>
+          <div></div>
+          <button
+            id="profileMenuBtn"
+            type="button"
+            class="profile-icon-btn"
+            aria-label="Open profile menu"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            👤
+          </button>
         </div>
         <h1 id="welcomeText">Welcome!</h1>
         <p>Your daily workout and fueling guidance.</p>
       </div>
 
-      <div class="compact-bar">
-        <div>
+      <div class="dashboard-top-row">
+        <section class="info-card top-info-card">
           <label for="selectedDate">Selected Date</label>
           <input id="selectedDate" type="date" />
-        </div>
+        </section>
+
+        <section class="info-card accent-card top-info-card">
+          <h2>Stress Level</h2>
+          <div id="stressBadge" class="badge badge-high">High</div>
+        </section>
       </div>
 
       <p id="statusMessage" class="status" style="display:none;"></p>
 
-      <section class="info-card accent-card">
-        <h2>Stress Level</h2>
-        <div id="stressBadge" class="badge badge-high">High</div>
-      </section>
-
       <section class="info-card">
-        <h2>Today's Workout</h2>
-        <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
-      </section>
-
-      <section class="info-card">
-        <h2>Fueling Guidance</h2>
-        <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
-      </section>
-
-      <section class="info-card">
-        <h2>Quick Summary</h2>
-        <div class="stats-row">
-          <div class="mini-stat"><span>Events</span><strong id="eventCount">0</strong></div>
-          <div class="mini-stat"><span>Workouts</span><strong id="workoutCount">0</strong></div>
-          <div class="mini-stat"><span>Meals</span><strong id="mealCount">0</strong></div>
-          <div class="mini-stat"><span>Wellness</span><strong id="wellnessCount">0</strong></div>
+        <div class="card-header-row">
+          <h2>Today's Workout</h2>
+          <div class="card-header-actions">
+            <button
+              type="button"
+              class="history-toggle"
+              aria-label="Show completed workouts"
+              data-target="completedWorkoutPopover"
+            >
+              📋
+            </button>
+          </div>
         </div>
+
+        <div class="guidance-section">
+          <div class="guidance-label">Recommended for the rest of the day</div>
+          <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
+        </div>
+
+        <div id="completedWorkoutPopover" class="completed-popover">
+          <div class="completed-popover-title">Completed workouts</div>
+          <ul id="completedWorkoutList" class="completed-mini-list">
+            <li class="empty-state">No workouts logged yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <div class="card-header-row">
+          <h2>Fueling Guidance</h2>
+          <div class="card-header-actions">
+            <button
+              type="button"
+              class="history-toggle"
+              aria-label="Show completed meals"
+              data-target="completedMealPopover"
+            >
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="guidance-section">
+          <div class="guidance-label">Recommended for the rest of the day</div>
+          <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
+        </div>
+
+        <div id="completedMealPopover" class="completed-popover">
+          <div class="completed-popover-title">Completed meals</div>
+          <ul id="completedMealList" class="completed-mini-list">
+            <li class="empty-state">No meals logged yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <h2>Guidance Summary</h2>
+        <div id="guidanceSummary" class="info-body">Your plan summary will appear here.</div>
       </section>
 
       <div class="toolbar equal-actions">
@@ -56,12 +114,116 @@
         <a class="button-link" href="./workout-entries.html">Workouts</a>
         <a class="button-link" href="./meal-entries.html">Meals</a>
       </div>
-      
+
       <div class="toolbar split-links">
         <a class="button-link btn-outline-link" href="./insights.html">Weekly Insights</a>
       </div>
     </section>
   </main>
+
+  <div id="profileOverlay" class="profile-overlay hidden">
+    <div
+      id="profileMenu"
+      class="profile-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="profileMenuTitle"
+    >
+      <div class="profile-modal-header">
+        <h2 id="profileMenuTitle">Profile</h2>
+        <button
+          id="closeProfileMenuBtn"
+          type="button"
+          class="profile-close-btn"
+          aria-label="Close profile menu"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="profile-menu-list">
+        <button id="openPasswordBtn" type="button" class="profile-menu-item">Change Password</button>
+        <button id="openMealPrefsBtn" type="button" class="profile-menu-item">Edit Meal Preference</button>
+        <button id="openBodyStatsBtn" type="button" class="profile-menu-item">Edit Body Stats</button>
+        <button id="profileLogoutBtn" type="button" class="profile-menu-item danger-item">Logout</button>
+      </div>
+
+      <div id="profilePanelMessage" class="profile-panel-message hidden"></div>
+
+      <form id="passwordForm" class="profile-form hidden">
+        <h3>Change Password</h3>
+
+        <div>
+          <label for="currentPassword">Current Password</label>
+          <input id="currentPassword" type="password" placeholder="Enter current password" />
+        </div>
+
+        <div>
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" type="password" placeholder="Enter new password" />
+        </div>
+
+        <div>
+          <label for="confirmPassword">Confirm Password</label>
+          <input id="confirmPassword" type="password" placeholder="Confirm new password" />
+        </div>
+
+        <div class="toolbar split-links">
+          <button type="submit">Save Password</button>
+        </div>
+      </form>
+
+      <form id="mealPrefsForm" class="profile-form hidden">
+        <h3>Edit Meal Preference</h3>
+
+        <div>
+          <label for="dietType">Diet Type</label>
+          <select id="dietType">
+            <option value="">Select diet type</option>
+            <option value="veg">Vegetarian</option>
+            <option value="non-veg">Non-Vegetarian</option>
+            <option value="vegan">Vegan</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="isGlutenFree">Gluten Free</label>
+          <select id="isGlutenFree">
+            <option value="">Select option</option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="allergens">Allergens</label>
+          <input id="allergens" type="text" placeholder="e.g. peanuts, dairy, soy" />
+        </div>
+
+        <div class="toolbar split-links">
+          <button type="submit">Save Preferences</button>
+        </div>
+      </form>
+
+      <form id="bodyStatsForm" class="profile-form hidden">
+        <h3>Edit Body Stats</h3>
+
+        <div>
+          <label for="heightCm">Height (cm)</label>
+          <input id="heightCm" type="number" min="1" step="0.1" placeholder="Enter height in cm" />
+        </div>
+
+        <div>
+          <label for="weightKg">Weight (kg)</label>
+          <input id="weightKg" type="number" min="1" step="0.1" placeholder="Enter weight in kg" />
+        </div>
+
+        <div class="toolbar split-links">
+          <button type="submit">Save Body Stats</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script type="module" src="./js/dashboard.js"></script>
 </body>

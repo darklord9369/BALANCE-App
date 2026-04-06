@@ -2,7 +2,6 @@ import { createEvent, getEventTypes, getEventById, updateEvent } from "./api.js"
 import {
   setStatus,
   requireAuth,
-  logout,
   getSelectedDate
 } from "./common.js";
 
@@ -14,7 +13,6 @@ const editId = params.get("edit");
 const returnTo = params.get("returnTo") || "event-entries";
 
 const els = {
-  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   eventForm: document.getElementById("eventForm"),
   pageTitle: document.getElementById("pageTitle"),
@@ -28,7 +26,6 @@ const els = {
   endDate: document.getElementById("endDate")
 };
 
-els.logoutBtn?.addEventListener("click", logout);
 els.backToEntriesLink.href = `./${returnTo}.html`;
 
 function setDefaults() {

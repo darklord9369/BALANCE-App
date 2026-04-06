@@ -1,17 +1,15 @@
 import { getWorkoutLogs, deleteWorkoutLog } from "./api.js";
-import { requireAuth, logout, setStatus, getSelectedDate } from "./common.js";
+import { requireAuth, setStatus, getSelectedDate } from "./common.js";
 
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
 
 const els = {
-  logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   selectedDateDisplay: document.getElementById("selectedDateDisplay"),
-  tableBody: document.getElementById("workoutTableBody")
+  tableBody: document.getElementById("workoutTableBody"),
+  tableHead: document.querySelector(".entry-table thead")
 };
-
-els.logoutBtn?.addEventListener("click", logout);
 
 function isSameDate(value, selectedDate) {
   return String(value || "").slice(0, 10) === selectedDate;
@@ -19,12 +17,20 @@ function isSameDate(value, selectedDate) {
 
 function renderRows(items) {
   if (!items.length) {
+    if (els.tableHead) {
+      els.tableHead.style.display = "none";
+    }
+
     els.tableBody.innerHTML = `
       <tr>
-        <td colspan="4">No workouts found for this day.</td>
+        <td colspan="4" class="empty-state-cell">No workouts found for this day.</td>
       </tr>
     `;
     return;
+  }
+
+  if (els.tableHead) {
+    els.tableHead.style.display = "";
   }
 
   els.tableBody.innerHTML = items.map((item) => `

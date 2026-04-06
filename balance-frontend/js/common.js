@@ -93,7 +93,11 @@ export function redirectIfLoggedIn(targetPage = "dashboard.html") {
 }
 
 export function todayIso() {
-  return new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, "0");
+  const day = `${now.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getSelectedDate() {
@@ -125,4 +129,78 @@ export function stressClass(value) {
   if (text.includes("low")) return "badge-low";
   if (text.includes("medium") || text.includes("moderate")) return "badge-medium";
   return "badge-high";
+}
+
+const API_BASE_URL = "https://localhost:5001/api";
+
+function getAuthToken() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  return auth.token;
+}
+
+async function authorizedFetch(url, options = {}) {
+  const token = getAuthToken();
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    let message = "Request failed.";
+    try {
+      const error = await response.json();
+      message = error.message || message;
+    } catch {
+      // ignore json parse failure
+    }
+    throw new Error(message);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return await response.json();
+}
+
+export async function getCurrentUser() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  const userId = auth?.user?.userId;
+  return await authorizedFetch(`${API_BASE_URL}/Users/${userId}`);
+}
+
+export async function getEvents() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  const userId = auth?.user?.userId;
+  return await authorizedFetch(`${API_BASE_URL}/Events?userId=${userId}`);
+}
+
+export async function getWorkoutLogs() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  const userId = auth?.user?.userId;
+  return await authorizedFetch(`${API_BASE_URL}/WorkoutLogs?userId=${userId}`);
+}
+
+export async function getMealLogs() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  const userId = auth?.user?.userId;
+  return await authorizedFetch(`${API_BASE_URL}/MealLogs?userId=${userId}`);
+}
+
+export async function getWellnessLogs() {
+  const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+  const userId = auth?.user?.userId;
+  return await authorizedFetch(`${API_BASE_URL}/WellnessLogs?userId=${userId}`);
+}
+
+export async function generateDailyGuidance(selectedDate) {
+  return await authorizedFetch(
+    `${API_BASE_URL}/DailyGuidance/generate?selectedDate=${encodeURIComponent(selectedDate)}`,
+    { method: "POST" }
+  );
 }
