@@ -105,6 +105,8 @@ els.workoutForm.addEventListener("submit", async (e) => {
       setStatus(els.status, "Workout saved.");
     }
 
+    localStorage.setItem("dashboardNeedsRefresh", String(Date.now()));
+
     setTimeout(() => {
       window.location.href = `./${returnTo}.html`;
     }, 600);

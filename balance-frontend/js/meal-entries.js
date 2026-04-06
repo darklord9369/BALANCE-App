@@ -8,7 +8,8 @@ const els = {
   logoutBtn: document.getElementById("logoutBtn"),
   status: document.getElementById("statusMessage"),
   selectedDateDisplay: document.getElementById("selectedDateDisplay"),
-  tableBody: document.getElementById("mealTableBody")
+  tableBody: document.getElementById("mealTableBody"),
+  tableHead: document.querySelector(".entry-table thead")
 };
 
 els.logoutBtn?.addEventListener("click", logout);
@@ -19,12 +20,20 @@ function isSameDate(value, selectedDate) {
 
 function renderRows(items) {
   if (!items.length) {
+    if (els.tableHead) {
+      els.tableHead.style.display = "none";
+    }
+
     els.tableBody.innerHTML = `
       <tr>
-        <td colspan="3">No meals found for this day.</td>
+        <td colspan="3" class="empty-state-cell">No meals found for this day.</td>
       </tr>
     `;
     return;
+  }
+
+  if (els.tableHead) {
+    els.tableHead.style.display = "";
   }
 
   els.tableBody.innerHTML = items.map((item) => `

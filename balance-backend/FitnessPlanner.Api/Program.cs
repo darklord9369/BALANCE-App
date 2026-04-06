@@ -1,5 +1,6 @@
 using System.Text;
 using FitnessPlanner.Api.Data;
+using FitnessPlanner.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -46,6 +47,8 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IDailyGuidanceAiService, DailyGuidanceAiService>();
+builder.Services.AddScoped<IDailyGuidanceService, DailyGuidanceService>();
 
 var app = builder.Build();
 

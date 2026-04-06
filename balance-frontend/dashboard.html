@@ -17,38 +17,79 @@
         <p>Your daily workout and fueling guidance.</p>
       </div>
 
-      <div class="compact-bar">
-        <div>
+      <div class="dashboard-top-row">
+        <section class="info-card top-info-card">
           <label for="selectedDate">Selected Date</label>
           <input id="selectedDate" type="date" />
-        </div>
+        </section>
+
+        <section class="info-card accent-card top-info-card">
+          <h2>Stress Level</h2>
+          <div id="stressBadge" class="badge badge-high">High</div>
+        </section>
       </div>
 
       <p id="statusMessage" class="status" style="display:none;"></p>
 
-      <section class="info-card accent-card">
-        <h2>Stress Level</h2>
-        <div id="stressBadge" class="badge badge-high">High</div>
-      </section>
-
       <section class="info-card">
-        <h2>Today's Workout</h2>
-        <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
-      </section>
-
-      <section class="info-card">
-        <h2>Fueling Guidance</h2>
-        <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
-      </section>
-
-      <section class="info-card">
-        <h2>Quick Summary</h2>
-        <div class="stats-row">
-          <div class="mini-stat"><span>Events</span><strong id="eventCount">0</strong></div>
-          <div class="mini-stat"><span>Workouts</span><strong id="workoutCount">0</strong></div>
-          <div class="mini-stat"><span>Meals</span><strong id="mealCount">0</strong></div>
-          <div class="mini-stat"><span>Wellness</span><strong id="wellnessCount">0</strong></div>
+        <div class="card-header-row">
+          <h2>Today's Workout</h2>
+          <div class="card-header-actions">
+            <button
+              type="button"
+              class="history-toggle"
+              aria-label="Show completed workouts"
+              data-target="completedWorkoutPopover"
+            >
+              📋
+            </button>
+          </div>
         </div>
+
+        <div class="guidance-section">
+          <div class="guidance-label">Recommended for the rest of the day</div>
+          <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
+        </div>
+
+        <div id="completedWorkoutPopover" class="completed-popover">
+          <div class="completed-popover-title">Completed workouts</div>
+          <ul id="completedWorkoutList" class="completed-mini-list">
+            <li class="empty-state">No workouts logged yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <div class="card-header-row">
+          <h2>Fueling Guidance</h2>
+          <div class="card-header-actions">
+            <button
+              type="button"
+              class="history-toggle"
+              aria-label="Show completed meals"
+              data-target="completedMealPopover"
+            >
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div class="guidance-section">
+          <div class="guidance-label">Recommended for the rest of the day</div>
+          <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
+        </div>
+
+        <div id="completedMealPopover" class="completed-popover">
+          <div class="completed-popover-title">Completed meals</div>
+          <ul id="completedMealList" class="completed-mini-list">
+            <li class="empty-state">No meals logged yet.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="info-card">
+        <h2>Guidance Summary</h2>
+        <div id="guidanceSummary" class="info-body">Your plan summary will appear here.</div>
       </section>
 
       <div class="toolbar equal-actions">
@@ -56,7 +97,7 @@
         <a class="button-link" href="./workout-entries.html">Workouts</a>
         <a class="button-link" href="./meal-entries.html">Meals</a>
       </div>
-      
+
       <div class="toolbar split-links">
         <a class="button-link btn-outline-link" href="./insights.html">Weekly Insights</a>
       </div>

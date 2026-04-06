@@ -85,6 +85,8 @@ els.mealForm.addEventListener("submit", async (e) => {
       setStatus(els.status, "Meal saved.");
     }
 
+    localStorage.setItem("dashboardNeedsRefresh", String(Date.now()));
+
     setTimeout(() => {
       window.location.href = `./${returnTo}.html`;
     }, 600);
