@@ -39,7 +39,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<UserProfile>(entity =>
         {
-            entity.HasKey(x => x.ProfileId);
+            entity.HasKey(x => x.UserProfileId);
             entity.HasIndex(x => x.UserId).IsUnique();
             entity.HasOne(x => x.User)
                 .WithOne(x => x.Profile)

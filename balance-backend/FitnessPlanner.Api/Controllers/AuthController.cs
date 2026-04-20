@@ -26,12 +26,14 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        if (await _db.Users.AnyAsync(x => x.Email == request.Email && x.DeletedAt == null))
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+
+        if (await _db.Users.AnyAsync(x => x.Email == normalizedEmail && x.DeletedAt == null))
             return BadRequest(new { message = "Email already exists." });
 
         var user = new User
         {
-            Email = request.Email.Trim().ToLowerInvariant(),
+            Email = normalizedEmail,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FirstName = request.FirstName.Trim(),
             LastName = request.LastName?.Trim()
@@ -47,15 +49,59 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
-        var user = await _db.Users.FirstOrDefaultAsync(x => x.Email == normalizedEmail && x.DeletedAt == null);
+
+        var user = await _db.Users
+            .FirstOrDefaultAsync(x => x.Email == normalizedEmail && x.DeletedAt == null);
+
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return Unauthorized(new { message = "Invalid credentials." });
 
         return Ok(new
         {
             token = GenerateJwt(user),
-            user = new { user.UserId, user.Email, user.FirstName, user.LastName, user.Role }
+            user = new
+            {
+                user.UserId,
+                user.Email,
+                user.FirstName,
+                user.LastName,
+                user.Role
+            }
         });
+    }
+
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+            string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return BadRequest(new { message = "Current password and new password are required." });
+        }
+
+        if (request.NewPassword.Length < 6)
+        {
+            return BadRequest(new { message = "New password must be at least 6 characters long." });
+        }
+
+        var user = await _db.Users
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId && x.DeletedAt == null);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "User not found." });
+        }
+
+        var passwordMatches = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
+        if (!passwordMatches)
+        {
+            return BadRequest(new { message = "Current password is incorrect." });
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _db.SaveChangesAsync();
+
+        return Ok(new { message = "Password changed successfully." });
     }
 
     private string GenerateJwt(User user)
@@ -69,12 +115,14 @@ public class AuthController : ControllerBase
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
         var token = new JwtSecurityToken(
             issuer: _config["Jwt:Issuer"],
             audience: _config["Jwt:Audience"],
             claims: claims,
             expires: DateTime.UtcNow.AddDays(7),
-            signingCredentials: creds);
+            signingCredentials: creds
+        );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }

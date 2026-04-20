@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FitnessPlanner.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDailyGuidance : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -279,26 +279,26 @@ namespace FitnessPlanner.Api.Migrations
                 name: "UserProfiles",
                 columns: table => new
                 {
-                    ProfileId = table.Column<long>(type: "bigint", nullable: false)
+                    UserProfileId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
                     Age = table.Column<int>(type: "integer", nullable: true),
                     Sex = table.Column<string>(type: "text", nullable: true),
                     HeightCm = table.Column<decimal>(type: "numeric", nullable: true),
                     WeightKg = table.Column<decimal>(type: "numeric", nullable: true),
-                    ActivityLevel = table.Column<string>(type: "text", nullable: false),
-                    PrimaryGoal = table.Column<string>(type: "text", nullable: false),
+                    ActivityLevel = table.Column<string>(type: "text", nullable: true),
+                    PrimaryGoal = table.Column<string>(type: "text", nullable: true),
                     TrainingBackground = table.Column<string>(type: "text", nullable: true),
                     SchoolName = table.Column<string>(type: "text", nullable: true),
                     TypicalSleepHours = table.Column<decimal>(type: "numeric", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Status = table.Column<string>(type: "text", nullable: false)
+                    DietType = table.Column<string>(type: "text", nullable: true),
+                    IsVegan = table.Column<bool>(type: "boolean", nullable: true),
+                    IsGlutenFree = table.Column<bool>(type: "boolean", nullable: true),
+                    Allergens = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserProfiles", x => x.ProfileId);
+                    table.PrimaryKey("PK_UserProfiles", x => x.UserProfileId);
                     table.ForeignKey(
                         name: "FK_UserProfiles_Users_UserId",
                         column: x => x.UserId,
