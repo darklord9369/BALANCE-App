@@ -5,7 +5,9 @@ import {
   getMealLogs,
   getWellnessLogs,
   generateDailyGuidance,
-  updateCurrentUserProfile
+  updateCurrentUserProfile,
+  updateCurrentUserMealPreferences,
+  changeCurrentUserPassword
 } from "./api.js";
 
 import {
@@ -19,10 +21,6 @@ import {
 
 const auth = requireAuth();
 if (!auth) throw new Error("Unauthorized");
-
-const LOCAL_KEYS = {
-  mealPreferences: "balance_mealPreferences"
-};
 
 const els = {
   status: document.getElementById("statusMessage"),
@@ -59,9 +57,13 @@ const els = {
 
   heightCm: document.getElementById("heightCm"),
   weightKg: document.getElementById("weightKg"),
+  age: document.getElementById("age"),
 
   dashboardCard: document.getElementById("dashboardCard"),
-  loadingState: document.getElementById("dashboardLoadingState")
+  loadingState: document.getElementById("dashboardLoadingState"),
+
+  workoutHistoryToggle: document.querySelector('.history-toggle[data-target="completedWorkoutPopover"]'),
+  mealHistoryToggle: document.querySelector('.history-toggle[data-target="completedMealPopover"]')
 };
 
 let currentUser = null;
@@ -145,7 +147,7 @@ function formatPlanLines(lines, fallbackText) {
     return fallbackText;
   }
 
-  return lines.map(item => `• ${item}`).join("\n");
+  return lines;
 }
 
 function escapeHtml(value) {
@@ -155,6 +157,21 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function renderPlanList(container, lines, fallbackText) {
+  if (!container) return;
+
+  if (!Array.isArray(lines) || lines.length === 0) {
+    container.textContent = fallbackText;
+    return;
+  }
+
+  container.innerHTML = `
+    <ul class="guidance-list">
+      ${lines.map(item => `<li>${escapeHtml(item)}</li>`).join("")}
+    </ul>
+  `;
 }
 
 function renderCompletedList(listEl, items, emptyText) {
@@ -265,28 +282,33 @@ function closeProfileMenu() {
   hideAllProfileForms();
 }
 
-function getStoredMealPreferences() {
-  try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEYS.mealPreferences) || "{}");
-  } catch {
-    return {};
+function fillMealPreferenceForm(user) {
+  const profile = user?.profile || user?.Profile || {};
+
+  const dietType = profile.dietType ?? profile.DietType ?? "";
+  const isVegan = profile.isVegan ?? profile.IsVegan ?? false;
+  const isGlutenFree = profile.isGlutenFree ?? profile.IsGlutenFree ?? false;
+  const allergens = profile.allergens ?? profile.Allergens ?? "";
+
+  if (els.dietType) {
+    els.dietType.value = isVegan ? "vegan" : dietType;
   }
-}
 
-function saveStoredMealPreferences(preferences) {
-  localStorage.setItem(LOCAL_KEYS.mealPreferences, JSON.stringify(preferences || {}));
-}
+  if (els.isGlutenFree) {
+    els.isGlutenFree.value = isGlutenFree ? "yes" : "no";
+  }
 
-function fillMealPreferenceForm() {
-  const saved = getStoredMealPreferences();
-
-  if (els.dietType) els.dietType.value = saved.dietType || "";
-  if (els.isGlutenFree) els.isGlutenFree.value = saved.isGlutenFree || "";
-  if (els.allergens) els.allergens.value = saved.allergens || "";
+  if (els.allergens) {
+    els.allergens.value = allergens || "";
+  }
 }
 
 function fillBodyStatsForm(user) {
   const profile = user?.profile || user?.Profile || {};
+
+  if (els.age) {
+    els.age.value = profile.age ?? profile.Age ?? "";
+  }
 
   if (els.heightCm) {
     els.heightCm.value = profile.heightCm ?? profile.HeightCm ?? "";
@@ -295,6 +317,40 @@ function fillBodyStatsForm(user) {
   if (els.weightKg) {
     els.weightKg.value = profile.weightKg ?? profile.WeightKg ?? "";
   }
+}
+
+function setGoalToggleState(button, isComplete) {
+  if (!button) return;
+
+  button.classList.remove("goal-complete-toggle", "goal-pending-toggle");
+
+  if (isComplete) {
+    button.innerHTML = "✓";
+    button.classList.add("goal-complete-toggle");
+    button.setAttribute("title", "You're done");
+    button.setAttribute("aria-label", "You're done");
+  } else {
+    button.innerHTML = "📋";
+    button.classList.add("goal-pending-toggle");
+    button.setAttribute("title", "View completed items");
+    button.setAttribute("aria-label", "View completed items");
+  }
+}
+
+function updateGoalCompletionIcons(guidance) {
+  const completedWorkoutCount = Array.isArray(guidance?.workout?.completed)
+    ? guidance.workout.completed.length
+    : 0;
+
+  const completedMealCount = Array.isArray(guidance?.meals?.completed)
+    ? guidance.meals.completed.length
+    : 0;
+
+  const workoutGoalCompleted = completedWorkoutCount >= 2;
+  const mealGoalCompleted = completedMealCount >= 3;
+
+  setGoalToggleState(els.workoutHistoryToggle, workoutGoalCompleted);
+  setGoalToggleState(els.mealHistoryToggle, mealGoalCompleted);
 }
 
 function showDashboardLoader() {
@@ -306,6 +362,8 @@ function hideDashboardLoader() {
   els.loadingState?.classList.add("hidden");
   els.dashboardCard?.classList.remove("dashboard-card-hidden");
 }
+
+
 
 async function loadDashboard() {
   showDashboardLoader();
@@ -336,13 +394,21 @@ async function loadDashboard() {
 
     renderStressLevel(selectedDateValue, wellnessLogs, events);
 
-    els.workoutSuggestion.textContent = formatPlanLines(
-      guidance?.workout?.currentPlan,
+    renderPlanList(
+      els.workoutSuggestion,
+      formatPlanLines(
+        guidance?.workout?.currentPlan,
+        "No workout guidance available."
+      ),
       "No workout guidance available."
     );
 
-    els.mealSuggestion.textContent = formatPlanLines(
-      guidance?.meals?.currentPlan,
+    renderPlanList(
+      els.mealSuggestion,
+      formatPlanLines(
+        guidance?.meals?.currentPlan,
+        "No meal guidance available."
+      ),
       "No meal guidance available."
     );
 
@@ -358,11 +424,13 @@ async function loadDashboard() {
       "No meals logged yet."
     );
 
+    updateGoalCompletionIcons(guidance);
+
     els.guidanceSummary.textContent =
       guidance?.summary ||
       "Your guidance is based on your selected date, recent logs, and upcoming events.";
 
-    fillMealPreferenceForm();
+    fillMealPreferenceForm(user);
     fillBodyStatsForm(user);
 
     setStatus(els.status, "Dashboard loaded.", false);
@@ -445,7 +513,7 @@ function initProfileMenu() {
 
   els.openMealPrefsBtn?.addEventListener("click", () => {
     hideProfileMessage();
-    fillMealPreferenceForm();
+    fillMealPreferenceForm(currentUser);
     showProfileForm(els.mealPrefsForm);
   });
 
@@ -455,7 +523,7 @@ function initProfileMenu() {
     showProfileForm(els.bodyStatsForm);
   });
 
-  els.passwordForm?.addEventListener("submit", event => {
+  els.passwordForm?.addEventListener("submit", async event => {
     event.preventDefault();
 
     const currentPassword = els.currentPassword?.value?.trim() || "";
@@ -472,30 +540,62 @@ function initProfileMenu() {
       return;
     }
 
-    showProfileMessage("Change password is not connected to the backend yet.", true);
+    try {
+      await changeCurrentUserPassword({
+        currentPassword,
+        newPassword,
+        confirmNewPassword: confirmPassword
+      });
+
+      els.passwordForm.reset();
+      showProfileMessage("Password updated successfully.");
+    } catch (error) {
+      console.error(error);
+      showProfileMessage(error.message || "Failed to change password.", true);
+    }
   });
 
-  els.mealPrefsForm?.addEventListener("submit", event => {
+  els.mealPrefsForm?.addEventListener("submit", async event => {
     event.preventDefault();
 
-    const preferences = {
-      dietType: els.dietType?.value || "",
-      isGlutenFree: els.isGlutenFree?.value || "",
-      allergens: els.allergens?.value?.trim() || ""
-    };
+    try {
+      const dietType = els.dietType?.value || "";
+      const isVegan = dietType === "vegan";
+      const isGlutenFree = (els.isGlutenFree?.value || "") === "yes";
+      const allergens = els.allergens?.value?.trim() || "";
 
-    saveStoredMealPreferences(preferences);
-    showProfileMessage("Meal preferences saved.");
+      await updateCurrentUserMealPreferences({
+        dietType,
+        isVegan,
+        isGlutenFree,
+        allergens
+      });
+
+      if (!currentUser) currentUser = {};
+      if (!currentUser.profile) currentUser.profile = {};
+
+      currentUser.profile.dietType = dietType;
+      currentUser.profile.isVegan = isVegan;
+      currentUser.profile.isGlutenFree = isGlutenFree;
+      currentUser.profile.allergens = allergens;
+
+      showProfileMessage("Meal preferences updated.");
+    } catch (error) {
+      console.error(error);
+      showProfileMessage(error.message || "Failed to update meal preferences.", true);
+    }
   });
 
   els.bodyStatsForm?.addEventListener("submit", async event => {
     event.preventDefault();
 
     try {
+      const ageValue = els.age?.value?.trim() || "";
       const heightValue = els.heightCm?.value?.trim() || "";
       const weightValue = els.weightKg?.value?.trim() || "";
 
       await updateCurrentUserProfile({
+        age: ageValue ? Number(ageValue) : null,
         heightCm: heightValue ? Number(heightValue) : null,
         weightKg: weightValue ? Number(weightValue) : null
       });
@@ -503,6 +603,7 @@ function initProfileMenu() {
       if (!currentUser) currentUser = {};
       if (!currentUser.profile) currentUser.profile = {};
 
+      currentUser.profile.age = ageValue ? Number(ageValue) : null;
       currentUser.profile.heightCm = heightValue ? Number(heightValue) : null;
       currentUser.profile.weightKg = weightValue ? Number(weightValue) : null;
 

@@ -63,6 +63,24 @@ export const loginUser = (payload) =>
     body: JSON.stringify(payload)
   });
 
+export const changePassword = (payload) =>
+  request("/api/Auth/change-password", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+export const changeCurrentUserPassword = ({ currentPassword, newPassword, confirmNewPassword }) => {
+  const userId = getCurrentUserId();
+  if (!userId) throw new Error("No logged-in user found.");
+
+  return changePassword({
+    userId,
+    currentPassword,
+    newPassword,
+    confirmNewPassword
+  });
+};
+
 // Users
 export const getUserById = (id) => request(`/api/Users/${id}`);
 
@@ -83,6 +101,25 @@ export const updateCurrentUserProfile = (payload) => {
   if (!userId) throw new Error("No logged-in user found.");
   return updateUserProfile(userId, payload);
 };
+
+export const updateCurrentUserMealPreferences = ({
+  dietType,
+  isVegan,
+  isGlutenFree,
+  allergens
+}) =>
+  updateCurrentUserProfile({
+    dietType,
+    isVegan,
+    isGlutenFree,
+    allergens
+  });
+
+export const updateCurrentUserBodyStats = ({ heightCm, weightKg }) =>
+  updateCurrentUserProfile({
+    heightCm,
+    weightKg
+  });
 
 // Events
 export const getEvents = (userId) => {

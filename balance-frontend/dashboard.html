@@ -180,8 +180,8 @@
           <label for="dietType">Diet Type</label>
           <select id="dietType">
             <option value="">Select diet type</option>
-            <option value="veg">Vegetarian</option>
-            <option value="non-veg">Non-Vegetarian</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="non-vegetarian">Non-Vegetarian</option>
             <option value="vegan">Vegan</option>
           </select>
         </div>
@@ -208,6 +208,10 @@
       <form id="bodyStatsForm" class="profile-form hidden">
         <h3>Edit Body Stats</h3>
 
+        <div>
+          <label for="age">Age</label>
+          <input id="age" type="number" min="1" step="1" placeholder="Enter age" />
+        </div>
         <div>
           <label for="heightCm">Height (cm)</label>
           <input id="heightCm" type="number" min="1" step="0.1" placeholder="Enter height in cm" />

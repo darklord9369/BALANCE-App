@@ -561,30 +561,34 @@ namespace FitnessPlanner.Api.Migrations
 
             modelBuilder.Entity("FitnessPlanner.Api.Models.UserProfile", b =>
                 {
-                    b.Property<long>("ProfileId")
+                    b.Property<long>("UserProfileId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("ProfileId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("UserProfileId"));
 
                     b.Property<string>("ActivityLevel")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int?>("Age")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Allergens")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("DietType")
+                        .HasColumnType("text");
 
                     b.Property<decimal?>("HeightCm")
                         .HasColumnType("numeric");
 
+                    b.Property<bool?>("IsGlutenFree")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsVegan")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PrimaryGoal")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("SchoolName")
@@ -593,18 +597,11 @@ namespace FitnessPlanner.Api.Migrations
                     b.Property<string>("Sex")
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("TrainingBackground")
                         .HasColumnType("text");
 
                     b.Property<decimal?>("TypicalSleepHours")
                         .HasColumnType("numeric");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
@@ -612,7 +609,7 @@ namespace FitnessPlanner.Api.Migrations
                     b.Property<decimal?>("WeightKg")
                         .HasColumnType("numeric");
 
-                    b.HasKey("ProfileId");
+                    b.HasKey("UserProfileId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
