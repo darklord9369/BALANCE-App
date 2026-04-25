@@ -10,54 +10,72 @@
   <main class="app-shell">
     <section class="screen-card">
       <div class="screen-header">
-        <h1>Fitness Planner</h1>
-        <p>Register a new account or log in to continue.</p>
+        <h1>BALANCE - Fitness Planner</h1>
+        <p id="authPageSubtitle">Log in to continue.</p>
       </div>
-
-      <p id="statusMessage" class="status" style="display:none;"></p>
-
-      <section class="info-card">
+  
+      <div id="statusMessage" class="status-banner" style="display:none;"></div>
+  
+      <!-- LOGIN CARD -->
+      <section id="loginCard" class="info-card auth-card">
         <h2>Login</h2>
+  
         <form id="loginForm" class="form-stack">
           <div>
             <label for="loginEmail">Email</label>
-            <input type="email" id="loginEmail" required />
+            <input id="loginEmail" type="email" required />
           </div>
-
+  
           <div>
             <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" required />
+            <input id="loginPassword" type="password" required />
           </div>
-
+  
           <button type="submit">Login</button>
         </form>
+  
+        <p class="auth-switch-text">
+          New user?
+          <button id="showRegisterBtn" type="button" class="text-link-btn">
+            Create Account
+          </button>
+        </p>
       </section>
-
-      <section class="info-card">
-        <h2>Register</h2>
+  
+      <!-- REGISTER CARD -->
+      <section id="registerCard" class="info-card auth-card hidden">
+        <h2>Create Account</h2>
+  
         <form id="registerForm" class="form-stack">
           <div>
             <label for="registerFirstName">First Name</label>
-            <input type="text" id="registerFirstName" required />
+            <input id="registerFirstName" type="text" required />
           </div>
-
+  
           <div>
             <label for="registerLastName">Last Name</label>
-            <input type="text" id="registerLastName" />
+            <input id="registerLastName" type="text" />
           </div>
-
+  
           <div>
             <label for="registerEmail">Email</label>
-            <input type="email" id="registerEmail" required />
+            <input id="registerEmail" type="email" required />
           </div>
-
+  
           <div>
             <label for="registerPassword">Password</label>
-            <input type="password" id="registerPassword" required />
+            <input id="registerPassword" type="password" required />
           </div>
-
-          <button type="submit">Register</button>
+  
+          <button type="submit">Create Account</button>
         </form>
+  
+        <p class="auth-switch-text">
+          Already have an account?
+          <button id="showLoginBtn" type="button" class="text-link-btn">
+            Login
+          </button>
+        </p>
       </section>
     </section>
   </main>

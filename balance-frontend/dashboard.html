@@ -16,22 +16,19 @@
     </div>
 
     <section id="dashboardCard" class="screen-card">
-      <div class="screen-header">
-        <div class="topbar">
-          <div></div>
-          <button
-            id="profileMenuBtn"
-            type="button"
-            class="profile-icon-btn"
-            aria-label="Open profile menu"
-            aria-haspopup="true"
-            aria-expanded="false"
-          >
-            👤
-          </button>
-        </div>
+      <div class="screen-header dashboard-hero">
         <h1 id="welcomeText">Welcome!</h1>
-        <p>Your daily workout and fueling guidance.</p>
+
+        <button
+          id="profileMenuBtn"
+          type="button"
+          class="profile-icon-btn"
+          aria-label="Open profile menu"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          👤
+        </button>
       </div>
 
       <div class="dashboard-top-row">
@@ -170,6 +167,7 @@
 
         <div class="toolbar split-links">
           <button type="submit">Save Password</button>
+          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
         </div>
       </form>
 
@@ -202,6 +200,7 @@
 
         <div class="toolbar split-links">
           <button type="submit">Save Preferences</button>
+          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
         </div>
       </form>
 
@@ -212,6 +211,7 @@
           <label for="age">Age</label>
           <input id="age" type="number" min="1" step="1" placeholder="Enter age" />
         </div>
+
         <div>
           <label for="heightCm">Height (cm)</label>
           <input id="heightCm" type="number" min="1" step="0.1" placeholder="Enter height in cm" />
@@ -224,6 +224,7 @@
 
         <div class="toolbar split-links">
           <button type="submit">Save Body Stats</button>
+          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
         </div>
       </form>
     </div>
