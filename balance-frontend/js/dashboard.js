@@ -623,6 +623,19 @@ function initProfileMenu() {
       closeProfileMenu();
     }
   });
+
+  document.querySelectorAll(".close-profile-form-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      els.passwordForm?.classList.add("hidden");
+      els.mealPrefsForm?.classList.add("hidden");
+      els.bodyStatsForm?.classList.add("hidden");
+  
+      els.profilePanelMessage?.classList.add("hidden");
+      if (els.profilePanelMessage) {
+        els.profilePanelMessage.textContent = "";
+      }
+    });
+  });
 }
 
 window.addEventListener("storage", event => {

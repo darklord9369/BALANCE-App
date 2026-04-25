@@ -104,50 +104,34 @@
     <section class="screen-card">
       <div class="screen-header">
         <h1>Weekly Summary</h1>
-        <p>Review your stress, workouts, meals, and wellness patterns.</p>
+        <p>Review your workout and meal patterns.</p>
       </div>
 
       <div id="statusMessage" class="status-banner status-loading">Loading insights...</div>
 
       <section class="info-card">
-        <h2>Weekly Summary</h2>
+        <h2>Report</h2>
         <div id="summaryText" class="info-body summary-bullets">No summary loaded yet.</div>
       </section>
 
       <section class="info-card">
-        <h2>Simple Trend View</h2>
-
-        <div class="trend-metrics">
-          <div class="trend-item">
-            <div class="trend-label-row">
-              <span>Stress Logs</span>
-              <span id="stressHoverValue" class="trend-hover-value">0</span>
-            </div>
-            <div id="stressTrack" class="trend-track" title="Stress Logs: 0">
-              <div id="stressBar" class="trend-fill stress"></div>
-            </div>
+        <div class="chart-header">
+          <div>
+            <h2>Workout Hours</h2>
+            <p id="chartRangeLabel" class="chart-subtitle">This week</p>
           </div>
-
-          <div class="trend-item">
-            <div class="trend-label-row">
-              <span>Workouts</span>
-              <span id="workoutHoverValue" class="trend-hover-value">0</span>
-            </div>
-            <div id="workoutTrack" class="trend-track" title="Workouts: 0">
-              <div id="workoutBar" class="trend-fill workouts"></div>
-            </div>
-          </div>
-
-          <div class="trend-item">
-            <div class="trend-label-row">
-              <span>Meals</span>
-              <span id="mealHoverValue" class="trend-hover-value">0</span>
-            </div>
-            <div id="mealTrack" class="trend-track" title="Meals: 0">
-              <div id="mealBar" class="trend-fill meals"></div>
-            </div>
+      
+          <div>
+            <label for="chartRange" class="sr-only">Chart Range</label>
+            <select id="chartRange">
+              <option value="week">This Week</option>
+              <option value="lastWeek">Last Week</option>
+              <option value="weekBefore">Week Before</option>
+            </select>
           </div>
         </div>
+      
+        <div id="workoutHoursChart" class="workout-chart"></div>
       </section>
 
       <div class="toolbar split-links">
