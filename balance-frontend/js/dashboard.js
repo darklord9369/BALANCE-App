@@ -7,7 +7,8 @@ import {
   generateDailyGuidance,
   updateCurrentUserProfile,
   updateCurrentUserMealPreferences,
-  changeCurrentUserPassword
+  changeCurrentUserPassword,
+  generateGuidanceSummary
 } from "./api.js";
 
 import {
@@ -73,6 +74,7 @@ function getTodayLocalDate() {
   const year = now.getFullYear();
   const month = `${now.getMonth() + 1}`.padStart(2, "0");
   const day = `${now.getDate()}`.padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
@@ -97,17 +99,30 @@ function ensureSelectedDate() {
 
 function normalizeDateInputValue(value) {
   if (!value) return "";
+
+  const textValue = String(value).slice(0, 10);
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) {
+    return textValue;
+  }
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
+
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 
 function parseDateOnly(value) {
   if (!value) return null;
-  const parts = value.split("-");
+
+  const normalized = normalizeDateInputValue(value);
+  if (!normalized) return null;
+
+  const parts = normalized.split("-");
   if (parts.length !== 3) return null;
 
   const year = Number(parts[0]);
@@ -118,8 +133,8 @@ function parseDateOnly(value) {
 }
 
 function isSameDay(dateValue, selectedDateValue) {
-  const left = parseDateOnly(normalizeDateInputValue(dateValue));
-  const right = parseDateOnly(normalizeDateInputValue(selectedDateValue));
+  const left = parseDateOnly(dateValue);
+  const right = parseDateOnly(selectedDateValue);
 
   if (!left || !right) return false;
 
@@ -134,8 +149,8 @@ function isEventActiveOnDate(event, selectedDateValue) {
   const selected = parseDateOnly(selectedDateValue);
   if (!selected) return false;
 
-  const start = parseDateOnly(normalizeDateInputValue(event.startDate));
-  const end = parseDateOnly(normalizeDateInputValue(event.endDate));
+  const start = parseDateOnly(event.startDate);
+  const end = parseDateOnly(event.endDate);
 
   if (!start || !end) return false;
 
@@ -151,7 +166,7 @@ function formatPlanLines(lines, fallbackText) {
 }
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -184,8 +199,8 @@ function renderCompletedList(listEl, items, emptyText) {
 
   listEl.innerHTML = items
     .map(item => {
-      const title = item.title || "Completed item";
-      const meta = item.timeLabel || item.typeLabel || "Logged today";
+      const title = item.title || item.name || "Completed item";
+      const meta = item.timeLabel || item.typeLabel || item.mealTime || "Logged today";
 
       return `
         <li class="completed-mini-item">
@@ -198,6 +213,8 @@ function renderCompletedList(listEl, items, emptyText) {
 }
 
 function renderStressLevel(selectedDateValue, wellnessLogs, events) {
+  if (!els.stressBadge) return;
+
   const activeEvents = Array.isArray(events)
     ? events.filter(event => isEventActiveOnDate(event, selectedDateValue))
     : [];
@@ -363,7 +380,24 @@ function hideDashboardLoader() {
   els.dashboardCard?.classList.remove("dashboard-card-hidden");
 }
 
+async function loadGuidanceSummary(selectedDateValue) {
+  if (!els.guidanceSummary) return;
 
+  els.guidanceSummary.textContent = "Generating guidance summary...";
+
+  try {
+    const result = await generateGuidanceSummary(selectedDateValue);
+
+    els.guidanceSummary.textContent =
+      result?.summary ||
+      "Your guidance is based on the events scheduled for this day. Keep your workout and fueling choices flexible based on your academic or training load.";
+  } catch (error) {
+    console.error("Guidance summary failed:", error);
+
+    els.guidanceSummary.textContent =
+      "Your guidance is based on the events scheduled for this day. Keep your workout and fueling choices flexible based on your academic or training load.";
+  }
+}
 
 async function loadDashboard() {
   showDashboardLoader();
@@ -387,10 +421,13 @@ async function loadDashboard() {
     const firstName =
       user?.firstName ||
       user?.FirstName ||
+      auth?.user?.firstName ||
       auth?.userName ||
       "User";
 
-    els.welcomeText.textContent = `Welcome, ${firstName}!`;
+    if (els.welcomeText) {
+      els.welcomeText.textContent = `Welcome, ${firstName}!`;
+    }
 
     renderStressLevel(selectedDateValue, wellnessLogs, events);
 
@@ -426,9 +463,7 @@ async function loadDashboard() {
 
     updateGoalCompletionIcons(guidance);
 
-    els.guidanceSummary.textContent =
-      guidance?.summary ||
-      "Your guidance is based on your selected date, recent logs, and upcoming events.";
+    await loadGuidanceSummary(selectedDateValue);
 
     fillMealPreferenceForm(user);
     fillBodyStatsForm(user);
@@ -437,6 +472,11 @@ async function loadDashboard() {
   } catch (error) {
     console.error(error);
     setStatus(els.status, error.message || "Unable to load dashboard.", true);
+
+    if (els.guidanceSummary) {
+      els.guidanceSummary.textContent =
+        "Unable to generate guidance summary right now. Keep your plan flexible and adjust your workout and meals based on today’s schedule.";
+    }
   } finally {
     hideDashboardLoader();
   }
@@ -521,6 +561,13 @@ function initProfileMenu() {
     hideProfileMessage();
     fillBodyStatsForm(currentUser);
     showProfileForm(els.bodyStatsForm);
+  });
+
+  document.querySelectorAll(".close-profile-form-btn").forEach(button => {
+    button.addEventListener("click", () => {
+      hideAllProfileForms();
+      hideProfileMessage();
+    });
   });
 
   els.passwordForm?.addEventListener("submit", async event => {
@@ -622,19 +669,6 @@ function initProfileMenu() {
     ) {
       closeProfileMenu();
     }
-  });
-
-  document.querySelectorAll(".close-profile-form-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-      els.passwordForm?.classList.add("hidden");
-      els.mealPrefsForm?.classList.add("hidden");
-      els.bodyStatsForm?.classList.add("hidden");
-  
-      els.profilePanelMessage?.classList.add("hidden");
-      if (els.profilePanelMessage) {
-        els.profilePanelMessage.textContent = "";
-      }
-    });
   });
 }
 

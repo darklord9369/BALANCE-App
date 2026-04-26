@@ -1127,6 +1127,27 @@ button,
   border: 1px solid var(--border);
 }
 
+#guidanceSummaryPopover {
+  margin-top: 12px;
+}
+
+#guidanceSummary {
+  line-height: 1.7;
+}
+
+.card-header-row {
+  margin-bottom: 4px;
+}
+
+.guidance-section {
+  margin-top: 0;
+  gap: 4px;
+}
+
+.guidance-label {
+  margin-bottom: 2px;
+}
+
 @keyframes dashboardSpin {
   to {
     transform: rotate(360deg);

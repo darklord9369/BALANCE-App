@@ -268,6 +268,18 @@ export const generateDailyGuidance = (selectedDate) => {
   );
 };
 
+export const generateGuidanceSummary = (selectedDate, userId) => {
+  const resolvedUserId = getCurrentUserId(userId);
+  if (!resolvedUserId) throw new Error("No logged-in user found.");
+
+  return request(
+    `/api/GuidanceSummary/generate?userId=${resolvedUserId}&selectedDate=${selectedDate}`,
+    {
+      method: "POST"
+    }
+  );
+};
+
 // Lookup tables
 export const getEventTypes = () => request("/api/EventTypes");
 export const getWorkoutTypes = () => request("/api/WorkoutTypes");

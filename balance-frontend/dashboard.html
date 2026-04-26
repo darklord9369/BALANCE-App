@@ -102,8 +102,25 @@
       </section>
 
       <section class="info-card">
-        <h2>Guidance Summary</h2>
-        <div id="guidanceSummary" class="info-body">Your plan summary will appear here.</div>
+        <div class="card-header-row">
+          <h2>Guidance Summary</h2>
+          <div class="card-header-actions">
+            <button
+              type="button"
+              class="history-toggle"
+              aria-label="Show guidance summary"
+              data-target="guidanceSummaryPopover"
+            >
+              📋
+            </button>
+          </div>
+        </div>
+      
+        <div id="guidanceSummaryPopover" class="completed-popover">
+          <div id="guidanceSummary" class="info-body">
+            Your plan summary will appear here.
+          </div>
+        </div>
       </section>
 
       <div class="toolbar equal-actions">
