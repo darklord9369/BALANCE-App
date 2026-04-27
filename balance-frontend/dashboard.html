@@ -62,7 +62,9 @@
 
         <div class="guidance-section">
           <div class="guidance-label">Recommended for the rest of the day</div>
-          <div id="workoutSuggestion" class="info-body">Load dashboard to see workout guidance.</div>
+          <div id="workoutSuggestion" class="info-body">
+            Load dashboard to see workout guidance.
+          </div>
         </div>
 
         <div id="completedWorkoutPopover" class="completed-popover">
@@ -90,7 +92,9 @@
 
         <div class="guidance-section">
           <div class="guidance-label">Recommended for the rest of the day</div>
-          <div id="mealSuggestion" class="info-body">Load dashboard to see meal guidance.</div>
+          <div id="mealSuggestion" class="info-body">
+            Load dashboard to see meal guidance.
+          </div>
         </div>
 
         <div id="completedMealPopover" class="completed-popover">
@@ -115,7 +119,7 @@
             </button>
           </div>
         </div>
-      
+
         <div id="guidanceSummaryPopover" class="completed-popover">
           <div id="guidanceSummary" class="info-body">
             Your plan summary will appear here.
@@ -145,6 +149,7 @@
     >
       <div class="profile-modal-header">
         <h2 id="profileMenuTitle">Profile</h2>
+
         <button
           id="closeProfileMenuBtn"
           type="button"
@@ -155,95 +160,163 @@
         </button>
       </div>
 
-      <div class="profile-menu-list">
-        <button id="openPasswordBtn" type="button" class="profile-menu-item">Change Password</button>
-        <button id="openMealPrefsBtn" type="button" class="profile-menu-item">Edit Meal Preference</button>
-        <button id="openBodyStatsBtn" type="button" class="profile-menu-item">Edit Body Stats</button>
-        <button id="profileLogoutBtn" type="button" class="profile-menu-item danger-item">Logout</button>
-      </div>
-
       <div id="profilePanelMessage" class="profile-panel-message hidden"></div>
 
-      <form id="passwordForm" class="profile-form hidden">
-        <h3>Change Password</h3>
+      <div id="profileMenuView">
+        <button type="button" data-profile-edit="password">Change Password</button>
+        <button type="button" data-profile-edit="meal">Edit Meal Preference</button>
+        <button type="button" data-profile-edit="workout">Edit Workout Preference</button>
+        <button type="button" data-profile-edit="body">Edit Body Stats</button>
+        <button type="button" id="profileLogoutBtn" class="danger-btn">Logout</button>
+      </div>
 
-        <div>
-          <label for="currentPassword">Current Password</label>
-          <input id="currentPassword" type="password" placeholder="Enter current password" />
-        </div>
+      <div id="profileEditView" hidden>
+        <form id="passwordEditForm" class="profile-edit-form" hidden>
 
-        <div>
-          <label for="newPassword">New Password</label>
-          <input id="newPassword" type="password" placeholder="Enter new password" />
-        </div>
+          <div>
+            <label for="currentPassword">Current Password</label>
+            <input
+              id="currentPassword"
+              type="password"
+              placeholder="Enter current password"
+            />
+          </div>
 
-        <div>
-          <label for="confirmPassword">Confirm Password</label>
-          <input id="confirmPassword" type="password" placeholder="Confirm new password" />
-        </div>
+          <div>
+            <label for="newPassword">New Password</label>
+            <input
+              id="newPassword"
+              type="password"
+              placeholder="Enter new password"
+            />
+          </div>
 
-        <div class="toolbar split-links">
-          <button type="submit">Save Password</button>
-          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
-        </div>
-      </form>
+          <div>
+            <label for="confirmPassword">Confirm Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              placeholder="Confirm new password"
+            />
+          </div>
 
-      <form id="mealPrefsForm" class="profile-form hidden">
-        <h3>Edit Meal Preference</h3>
+          <div class="toolbar split-links">
+            <button type="submit">Save Password</button>
+            <button type="button" class="profileBackBtn btn-outline-link">Back</button>
+          </div>
+        </form>
 
-        <div>
-          <label for="dietType">Diet Type</label>
-          <select id="dietType">
-            <option value="">Select diet type</option>
-            <option value="vegetarian">Vegetarian</option>
-            <option value="non-vegetarian">Non-Vegetarian</option>
-            <option value="vegan">Vegan</option>
-          </select>
-        </div>
+        <form id="mealPreferenceForm" class="profile-edit-form" hidden>
 
-        <div>
-          <label for="isGlutenFree">Gluten Free</label>
-          <select id="isGlutenFree">
-            <option value="">Select option</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </div>
+          <div>
+            <label for="dietType">Diet Type</label>
+            <select id="dietType">
+              <option value="">Select diet type</option>
+              <option value="Regular">Regular</option>
+              <option value="Vegetarian">Vegetarian</option>
+              <option value="Pescetarian">Pescetarian</option>
+              <option value="Eggetarian">Eggetarian</option>
+              <option value="Vegan">Vegan</option>
+            </select>
+          </div>
 
-        <div>
-          <label for="allergens">Allergens</label>
-          <input id="allergens" type="text" placeholder="e.g. peanuts, dairy, soy" />
-        </div>
+          <div>
+            <label for="isGlutenFree">Gluten Free</label>
+            <select id="isGlutenFree">
+              <option value="">Select option</option>
+              <option value="yes">Yes</option>
+              <option value="no">No</option>
+            </select>
+          </div>
 
-        <div class="toolbar split-links">
-          <button type="submit">Save Preferences</button>
-          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
-        </div>
-      </form>
+          <div>
+            <label for="allergens">Allergens</label>
+            <input
+              id="allergens"
+              type="text"
+              placeholder="e.g. peanuts, dairy, soy"
+            />
+          </div>
 
-      <form id="bodyStatsForm" class="profile-form hidden">
-        <h3>Edit Body Stats</h3>
+          <div class="toolbar split-links">
+            <button type="submit">Save Changes</button>
+            <button type="button" class="profileBackBtn btn-outline-link">Back</button>
+          </div>
+        </form>
 
-        <div>
-          <label for="age">Age</label>
-          <input id="age" type="number" min="1" step="1" placeholder="Enter age" />
-        </div>
+        <form id="workoutPreferenceForm" class="profile-edit-form" hidden>
 
-        <div>
-          <label for="heightCm">Height (cm)</label>
-          <input id="heightCm" type="number" min="1" step="0.1" placeholder="Enter height in cm" />
-        </div>
+          <div>
+            <label for="workoutPreferenceId">Workout Preference</label>
+            <select id="workoutPreferenceId">
+              <option value="">Select workout preference</option>
+            </select>
+          </div>
 
-        <div>
-          <label for="weightKg">Weight (kg)</label>
-          <input id="weightKg" type="number" min="1" step="0.1" placeholder="Enter weight in kg" />
-        </div>
+          <div>
+            <label for="preferredWorkoutDurationMinutes">
+              Preferred Workout Duration (minutes)
+            </label>
+            <input
+              id="preferredWorkoutDurationMinutes"
+              type="number"
+              min="5"
+              max="240"
+              step="5"
+              placeholder="e.g. 30"
+            />
+          </div>
 
-        <div class="toolbar split-links">
-          <button type="submit">Save Body Stats</button>
-          <button type="button" class="btn-outline close-profile-form-btn">Close</button>
-        </div>
-      </form>
+          <div class="toolbar split-links">
+            <button type="submit">Save Changes</button>
+            <button type="button" class="profileBackBtn btn-outline-link">Back</button>
+          </div>
+        </form>
+
+        <form id="bodyStatsForm" class="profile-edit-form" hidden>
+
+          <div>
+            <label for="age">Age</label>
+            <input
+              id="age"
+              type="number"
+              min="13"
+              max="99"
+              step="1"
+              placeholder="Enter age"
+            />
+          </div>
+
+          <div>
+            <label for="heightCm">Height (cm)</label>
+            <input
+              id="heightCm"
+              type="number"
+              min="1"
+              max="250"
+              step="0.1"
+              placeholder="Enter height in cm"
+            />
+          </div>
+
+          <div>
+            <label for="weightKg">Weight (kg)</label>
+            <input
+              id="weightKg"
+              type="number"
+              min="1"
+              max="650"
+              step="0.1"
+              placeholder="Enter weight in kg"
+            />
+          </div>
+
+          <div class="toolbar split-links">
+            <button type="submit">Save Changes</button>
+            <button type="button" class="profileBackBtn btn-outline-link">Back</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 

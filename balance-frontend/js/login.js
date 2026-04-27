@@ -79,9 +79,7 @@ els.registerForm?.addEventListener("submit", async (e) => {
 
     await registerUser(payload);
 
-    showStatus("Registration successful. Please log in.");
     els.registerForm.reset();
-
     showLoginCard();
     showStatus("Registration successful. Please log in.");
   } catch (error) {

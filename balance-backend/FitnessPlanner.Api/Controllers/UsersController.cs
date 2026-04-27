@@ -19,6 +19,7 @@ public class UsersController : ControllerBase
     {
         var user = await _db.Users
             .Include(u => u.Profile)
+                .ThenInclude(p => p.WorkoutPreference)
             .FirstOrDefaultAsync(u => u.UserId == id && u.DeletedAt == null);
 
         if (user == null) return NotFound();
@@ -44,10 +45,19 @@ public class UsersController : ControllerBase
                 user.Profile.TrainingBackground,
                 user.Profile.SchoolName,
                 user.Profile.TypicalSleepHours,
+
                 user.Profile.DietType,
                 user.Profile.IsVegan,
                 user.Profile.IsGlutenFree,
-                user.Profile.Allergens
+                user.Profile.Allergens,
+
+                user.Profile.WorkoutPreferenceId,
+                user.Profile.PreferredWorkoutDurationMinutes,
+                WorkoutPreference = user.Profile.WorkoutPreference == null ? null : new
+                {
+                    user.Profile.WorkoutPreference.WorkoutPreferenceId,
+                    user.Profile.WorkoutPreference.Name
+                }
             }
         });
     }
@@ -59,9 +69,22 @@ public class UsersController : ControllerBase
         {
             var user = await _db.Users
                 .Include(u => u.Profile)
+                    .ThenInclude(p => p.WorkoutPreference)
                 .FirstOrDefaultAsync(u => u.UserId == id && u.DeletedAt == null);
 
             if (user == null) return NotFound();
+
+            if (dto.WorkoutPreferenceId.HasValue)
+            {
+                var preferenceExists = await _db.WorkoutPreferences.AnyAsync(x =>
+                    x.WorkoutPreferenceId == dto.WorkoutPreferenceId.Value &&
+                    x.DeletedAt == null);
+
+                if (!preferenceExists)
+                {
+                    return BadRequest(new { message = "Workout preference not found." });
+                }
+            }
 
             var profile = user.Profile ?? new UserProfile { UserId = id };
 
@@ -80,6 +103,20 @@ public class UsersController : ControllerBase
             if (dto.IsGlutenFree.HasValue) profile.IsGlutenFree = dto.IsGlutenFree;
             if (dto.Allergens != null) profile.Allergens = dto.Allergens;
 
+            if (dto.WorkoutPreferenceId.HasValue || dto.WorkoutPreferenceId == null)
+            {
+                profile.WorkoutPreferenceId = dto.WorkoutPreferenceId;
+            }
+
+            if (dto.PreferredWorkoutDurationMinutes.HasValue)
+            {
+                profile.PreferredWorkoutDurationMinutes = dto.PreferredWorkoutDurationMinutes;
+            }
+            else if (dto.ClearPreferredWorkoutDurationMinutes == true)
+            {
+                profile.PreferredWorkoutDurationMinutes = null;
+            }
+
             if (user.Profile == null)
             {
                 _db.UserProfiles.Add(profile);
@@ -87,23 +124,41 @@ public class UsersController : ControllerBase
 
             await _db.SaveChangesAsync();
 
+            var updatedProfile = await _db.UserProfiles
+                .Include(p => p.WorkoutPreference)
+                .FirstOrDefaultAsync(p => p.UserId == id);
+
+            if (updatedProfile == null)
+            {
+                return Ok(profile);
+            }
+
             return Ok(new
             {
-                profile.UserProfileId,
-                profile.UserId,
-                profile.Age,
-                profile.Sex,
-                profile.HeightCm,
-                profile.WeightKg,
-                profile.ActivityLevel,
-                profile.PrimaryGoal,
-                profile.TrainingBackground,
-                profile.SchoolName,
-                profile.TypicalSleepHours,
-                profile.DietType,
-                profile.IsVegan,
-                profile.IsGlutenFree,
-                profile.Allergens
+                updatedProfile.UserProfileId,
+                updatedProfile.UserId,
+                updatedProfile.Age,
+                updatedProfile.Sex,
+                updatedProfile.HeightCm,
+                updatedProfile.WeightKg,
+                updatedProfile.ActivityLevel,
+                updatedProfile.PrimaryGoal,
+                updatedProfile.TrainingBackground,
+                updatedProfile.SchoolName,
+                updatedProfile.TypicalSleepHours,
+
+                updatedProfile.DietType,
+                updatedProfile.IsVegan,
+                updatedProfile.IsGlutenFree,
+                updatedProfile.Allergens,
+
+                updatedProfile.WorkoutPreferenceId,
+                updatedProfile.PreferredWorkoutDurationMinutes,
+                WorkoutPreference = updatedProfile.WorkoutPreference == null ? null : new
+                {
+                    updatedProfile.WorkoutPreference.WorkoutPreferenceId,
+                    updatedProfile.WorkoutPreference.Name
+                }
             });
         }
         catch (Exception ex)

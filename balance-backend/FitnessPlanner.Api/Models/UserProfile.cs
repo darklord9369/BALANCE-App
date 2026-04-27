@@ -20,5 +20,9 @@ public class UserProfile
     public bool? IsGlutenFree { get; set; }
     public string? Allergens { get; set; }
 
+    public long? WorkoutPreferenceId { get; set; }
+    public WorkoutPreference? WorkoutPreference { get; set; }
+
+    public int? PreferredWorkoutDurationMinutes { get; set; }
     public User User { get; set; } = null!;
 }

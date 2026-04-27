@@ -24,6 +24,7 @@ public class AppDbContext : DbContext
     public DbSet<SummaryEvent> SummaryEvents => Set<SummaryEvent>();
     public DbSet<RecommendationEventLink> RecommendationEventLinks => Set<RecommendationEventLink>();
     public DbSet<DailyGuidance> DailyGuidances => Set<DailyGuidance>();
+    public DbSet<WorkoutPreference> WorkoutPreferences => Set<WorkoutPreference>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -115,6 +116,16 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<WorkoutPreference>().HasData(
+            new WorkoutPreference { WorkoutPreferenceId = 1, Name = "General Fitness" },
+            new WorkoutPreference { WorkoutPreferenceId = 2, Name = "Build Strength" },
+            new WorkoutPreference { WorkoutPreferenceId = 3, Name = "Weight Loss" },
+            new WorkoutPreference { WorkoutPreferenceId = 4, Name = "Endurance" },
+            new WorkoutPreference { WorkoutPreferenceId = 5, Name = "Mobility & Flexibility" },
+            new WorkoutPreference { WorkoutPreferenceId = 6, Name = "Recovery" },
+            new WorkoutPreference { WorkoutPreferenceId = 7, Name = "Beginner-Friendly" }
+);
+
         modelBuilder.Entity<WellnessLog>(entity =>
         {
             entity.HasKey(x => x.WellnessLogId);
@@ -154,7 +165,7 @@ public class AppDbContext : DbContext
             entity.HasKey(x => x.RecommendationEventLinkId);
             entity.HasIndex(x => new { x.RecommendationId, x.EventId }).IsUnique();
         });
-        
+
         modelBuilder.Entity<DailyGuidance>(entity =>
 {
     entity.HasKey(x => x.DailyGuidanceId);

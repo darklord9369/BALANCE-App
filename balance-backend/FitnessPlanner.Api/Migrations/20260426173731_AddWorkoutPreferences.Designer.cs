@@ -3,6 +3,7 @@ using System;
 using FitnessPlanner.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FitnessPlanner.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260426173731_AddWorkoutPreferences")]
+    partial class AddWorkoutPreferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -588,8 +591,8 @@ namespace FitnessPlanner.Api.Migrations
                     b.Property<bool?>("IsVegan")
                         .HasColumnType("boolean");
 
-                    b.Property<int?>("PreferredWorkoutDurationMinutes")
-                        .HasColumnType("integer");
+                    b.Property<string>("PreferredWorkoutTime")
+                        .HasColumnType("text");
 
                     b.Property<string>("PrimaryGoal")
                         .HasColumnType("text");

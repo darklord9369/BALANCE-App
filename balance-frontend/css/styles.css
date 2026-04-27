@@ -69,14 +69,25 @@ body {
 
 .form-stack {
   display: grid;
-  gap: 12px;
+  gap: 18px;
   margin-top: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 8px;
 }
 
 .grid-two {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
 }
 
 label {
@@ -129,7 +140,8 @@ button,
   background: var(--secondary);
 }
 
-.btn-outline-link {
+.btn-outline-link,
+.btn-outline {
   background: #fff;
   color: var(--text);
   border: 1px solid var(--border);
@@ -542,7 +554,7 @@ button,
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .card-header-row h2 {
@@ -563,12 +575,14 @@ button,
 
 .guidance-section {
   display: grid;
-  gap: 10px;
+  gap: 4px;
+  margin-top: 0;
 }
 
 .guidance-label {
   font-weight: 700;
   color: var(--muted);
+  margin-bottom: 2px;
 }
 
 .history-toggle {
@@ -943,13 +957,14 @@ button,
   font-weight: 600;
 }
 
+/* Fixed chart layout */
 .workout-chart {
   height: 215px;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 2px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 4px;
   padding: 4px 0 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .chart-y-axis {
@@ -960,40 +975,40 @@ button,
   color: var(--muted);
   font-size: 0.68rem;
   text-align: right;
-  padding-right: 2px;
+  padding-right: 4px;
 }
 
 .chart-plot {
   position: relative;
-  height: 195px;
-  min-width: 0;
-  width: 100%;
+  height: 170px;
+  border-left: 1px solid #cbd5e1;
+  border-bottom: 1px solid #cbd5e1;
   overflow: visible;
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
 }
 
 .y-grid {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 1px solid rgba(100, 116, 139, 0.22);
+  border-top: 1px solid #d6dce7;
+  pointer-events: none;
+  z-index: 1;
 }
 
-.y-grid-6 {
+.y-grid-3 {
   top: 0;
 }
 
-.y-grid-4 {
-  top: 56.6px;
+.y-grid-2 {
+  top: 33.33%;
 }
 
-.y-grid-2 {
-  top: 113.3px;
+.y-grid-1 {
+  top: 66.66%;
 }
 
 .y-grid-0 {
-  top: 170px;
+  bottom: 0;
 }
 
 .chart-bars {
@@ -1001,20 +1016,22 @@ button,
   left: 0;
   right: 0;
   bottom: 0;
-  height: 195px;
+  height: 170px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   align-items: end;
-  padding: 0 2px;
+  gap: 6px;
+  padding: 0 8px;
+  z-index: 2;
 }
 
 .workout-bar-item {
-  height: 195px;
+  height: 170px;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
   position: relative;
   overflow: visible;
 }
@@ -1034,11 +1051,14 @@ button,
 }
 
 .workout-bar-item span {
-  margin-top: 6px;
+  position: absolute;
+  top: 176px;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.68rem;
   color: var(--muted);
   white-space: nowrap;
-  max-width: 46px;
+  max-width: 48px;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
@@ -1046,7 +1066,9 @@ button,
 
 .bar-tooltip {
   position: absolute;
-  bottom: calc(100% - 18px);
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
   background: #111827;
   color: #fff;
   padding: 5px 8px;
@@ -1056,7 +1078,7 @@ button,
   pointer-events: none;
   white-space: nowrap;
   transition: opacity 0.15s ease;
-  z-index: 5;
+  z-index: 10;
 }
 
 .workout-bar-item:hover .bar-tooltip {
@@ -1099,10 +1121,6 @@ button,
   color: #1d4ed8;
 }
 
-.hidden {
-  display: none !important;
-}
-
 .dashboard-hero {
   display: flex;
   justify-content: space-between;
@@ -1121,12 +1139,6 @@ button,
   flex-shrink: 0;
 }
 
-.btn-outline {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
 #guidanceSummaryPopover {
   margin-top: 12px;
 }
@@ -1135,17 +1147,27 @@ button,
   line-height: 1.7;
 }
 
-.card-header-row {
-  margin-bottom: 4px;
+#profileMenuView,
+#profileEditView {
+  display: grid;
+  gap: 16px;
 }
 
-.guidance-section {
-  margin-top: 0;
-  gap: 4px;
+#profileMenuView[hidden],
+#profileEditView[hidden],
+.profile-edit-form[hidden] {
+  display: none !important;
 }
 
-.guidance-label {
-  margin-bottom: 2px;
+.profile-edit-form {
+  display: grid;
+  gap: 14px;
+}
+
+.profileBackBtn {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 @keyframes dashboardSpin {
@@ -1155,6 +1177,11 @@ button,
 }
 
 @media (max-width: 640px) {
+  .split-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
   .equal-actions {
     flex-direction: row;
   }

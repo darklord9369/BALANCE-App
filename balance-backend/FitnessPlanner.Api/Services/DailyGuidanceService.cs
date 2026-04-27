@@ -32,18 +32,31 @@ public class DailyGuidanceService : IDailyGuidanceService
 
         var user = await _db.Users
             .Include(x => x.Profile)
+                .ThenInclude(p => p.WorkoutPreference)
             .FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null);
 
         var currentMealPreferenceSignature = BuildMealPreferenceSignature(user);
         var storedMealPreferenceSignature = guidance == null
             ? ""
-            : ExtractStoredMealPreferenceSignature(guidance.SummaryText);
+            : ExtractStoredSignature(guidance.SummaryText, MealPreferenceMarker);
 
         var mealPreferencesChanged =
             guidance != null &&
             !string.Equals(
                 currentMealPreferenceSignature,
                 storedMealPreferenceSignature,
+                StringComparison.Ordinal);
+
+        var currentWorkoutPreferenceSignature = BuildWorkoutPreferenceSignature(user);
+        var storedWorkoutPreferenceSignature = guidance == null
+            ? ""
+            : ExtractStoredSignature(guidance.SummaryText, WorkoutPreferenceMarker);
+
+        var workoutPreferencesChanged =
+            guidance != null &&
+            !string.Equals(
+                currentWorkoutPreferenceSignature,
+                storedWorkoutPreferenceSignature,
                 StringComparison.Ordinal);
 
         if (mealPreferencesChanged && guidance != null)
@@ -53,7 +66,20 @@ public class DailyGuidanceService : IDailyGuidanceService
             guidance.CompletedMealsJson = "[]";
         }
 
-        var context = await BuildContextAsync(userId, selectedDate, guidance, mealPreferencesChanged);
+        if (workoutPreferencesChanged && guidance != null)
+        {
+            guidance.InitialWorkoutPlanJson = "[]";
+            guidance.CurrentWorkoutPlanJson = "[]";
+            guidance.CompletedWorkoutsJson = "[]";
+        }
+
+        var context = await BuildContextAsync(
+            userId,
+            selectedDate,
+            guidance,
+            mealPreferencesChanged,
+            workoutPreferencesChanged);
+
         var aiResult = await _dailyGuidanceAiService.GenerateAsync(context);
 
         aiResult.Workout.Completed = BuildCompletedWorkoutItems(context.TodayCompletedWorkouts);
@@ -90,10 +116,10 @@ public class DailyGuidanceService : IDailyGuidanceService
         guidance.CompletedWorkoutsJson = Serialize(aiResult.Workout.Completed);
         guidance.CompletedMealsJson = Serialize(aiResult.Meals.Completed);
 
-        guidance.SummaryText = AttachMealPreferenceSignature(
+        guidance.SummaryText = AttachStoredSignatures(
             aiResult.Summary ?? "",
-            currentMealPreferenceSignature
-        );
+            currentMealPreferenceSignature,
+            currentWorkoutPreferenceSignature);
 
         guidance.ModelVersion = _config["GenAI:Model"] ?? "llama3.1:latest";
         guidance.UpdatedAt = DateTime.UtcNow;
@@ -115,7 +141,7 @@ public class DailyGuidanceService : IDailyGuidanceService
                 CurrentPlan = aiResult.Meals.CurrentPlan,
                 Completed = aiResult.Meals.Completed
             },
-            Summary = RemoveStoredMealPreferenceSignature(guidance.SummaryText)
+            Summary = RemoveStoredSignatures(guidance.SummaryText)
         };
     }
 
@@ -123,7 +149,8 @@ public class DailyGuidanceService : IDailyGuidanceService
         long userId,
         DateOnly selectedDate,
         DailyGuidance? existingGuidance,
-        bool ignorePriorMealPlans)
+        bool ignorePriorMealPlans,
+        bool ignorePriorWorkoutPlans)
     {
         var recentStartDate = selectedDate.AddDays(-7);
         var recentEndDate = selectedDate;
@@ -132,6 +159,7 @@ public class DailyGuidanceService : IDailyGuidanceService
 
         var user = await _db.Users
             .Include(x => x.Profile)
+                .ThenInclude(p => p.WorkoutPreference)
             .FirstOrDefaultAsync(x => x.UserId == userId && x.DeletedAt == null);
 
         var workouts = await _db.WorkoutLogs
@@ -205,6 +233,8 @@ public class DailyGuidanceService : IDailyGuidanceService
 
         var stressLevel = ResolveStressLevel(selectedDate, wellnessLogs, events);
 
+        var profile = user?.Profile;
+
         return new DailyGuidanceContextDto
         {
             SelectedDate = selectedDate.ToString("yyyy-MM-dd"),
@@ -214,20 +244,31 @@ public class DailyGuidanceService : IDailyGuidanceService
             UpcomingEvents = eventSummaries,
             TodayCompletedWorkouts = todayCompletedWorkouts,
             TodayCompletedMeals = todayCompletedMeals,
-            PriorInitialWorkoutPlan = DeserializeStringList(existingGuidance?.InitialWorkoutPlanJson),
-            PriorCurrentWorkoutPlan = DeserializeStringList(existingGuidance?.CurrentWorkoutPlanJson),
+
+            PriorInitialWorkoutPlan = ignorePriorWorkoutPlans
+                ? new List<string>()
+                : DeserializeStringList(existingGuidance?.InitialWorkoutPlanJson),
+
+            PriorCurrentWorkoutPlan = ignorePriorWorkoutPlans
+                ? new List<string>()
+                : DeserializeStringList(existingGuidance?.CurrentWorkoutPlanJson),
+
             PriorInitialMealPlan = ignorePriorMealPlans
                 ? new List<string>()
                 : DeserializeStringList(existingGuidance?.InitialMealPlanJson),
+
             PriorCurrentMealPlan = ignorePriorMealPlans
                 ? new List<string>()
                 : DeserializeStringList(existingGuidance?.CurrentMealPlanJson),
 
-            Age = user?.Profile?.Age,
-            DietType = user?.Profile?.DietType,
-            IsVegan = user?.Profile?.IsVegan,
-            IsGlutenFree = user?.Profile?.IsGlutenFree,
-            Allergens = user?.Profile?.Allergens
+            Age = profile?.Age,
+            DietType = profile?.DietType,
+            IsVegan = profile?.IsVegan,
+            IsGlutenFree = profile?.IsGlutenFree,
+            Allergens = profile?.Allergens,
+
+            WorkoutPreference = profile?.WorkoutPreference?.Name,
+            PreferredWorkoutDurationMinutes = profile?.PreferredWorkoutDurationMinutes
         };
     }
 
@@ -318,14 +359,30 @@ public class DailyGuidanceService : IDailyGuidanceService
         return $"{dietType}|{isVegan}|{isGlutenFree}|{allergens}";
     }
 
-    private static string ExtractStoredMealPreferenceSignature(string? summaryText)
+    private static string BuildWorkoutPreferenceSignature(User? user)
+    {
+        var workoutPreference =
+            user?.Profile?.WorkoutPreference?.Name?.Trim().ToLowerInvariant() ?? "";
+
+        var workoutPreferenceId =
+            user?.Profile?.WorkoutPreferenceId?.ToString() ?? "";
+
+        var preferredWorkoutDurationMinutes =
+            user?.Profile?.PreferredWorkoutDurationMinutes?.ToString() ?? "";
+
+        return $"{workoutPreferenceId}|{workoutPreference}|{preferredWorkoutDurationMinutes}";
+    }
+
+    private const string MealPreferenceMarker = "[MEAL_PREF_SIGNATURE]:";
+    private const string WorkoutPreferenceMarker = "[WORKOUT_PREF_SIGNATURE]:";
+
+    private static string ExtractStoredSignature(string? summaryText, string marker)
     {
         if (string.IsNullOrWhiteSpace(summaryText))
         {
             return "";
         }
 
-        const string marker = "[MEAL_PREF_SIGNATURE]:";
         var start = summaryText.IndexOf(marker, StringComparison.Ordinal);
         if (start < 0)
         {
@@ -342,14 +399,26 @@ public class DailyGuidanceService : IDailyGuidanceService
         return summaryText[start..end].Trim();
     }
 
-    private static string RemoveStoredMealPreferenceSignature(string? summaryText)
+    private static string RemoveStoredSignatures(string? summaryText)
     {
         if (string.IsNullOrWhiteSpace(summaryText))
         {
             return "";
         }
 
-        const string marker = "[MEAL_PREF_SIGNATURE]:";
+        var withoutMeal = RemoveStoredSignature(summaryText, MealPreferenceMarker);
+        var withoutWorkout = RemoveStoredSignature(withoutMeal, WorkoutPreferenceMarker);
+
+        return withoutWorkout.Trim();
+    }
+
+    private static string RemoveStoredSignature(string? summaryText, string marker)
+    {
+        if (string.IsNullOrWhiteSpace(summaryText))
+        {
+            return "";
+        }
+
         var start = summaryText.IndexOf(marker, StringComparison.Ordinal);
         if (start < 0)
         {
@@ -364,13 +433,22 @@ public class DailyGuidanceService : IDailyGuidanceService
 
         var before = summaryText[..start];
         var after = summaryText[(end + 1)..];
+
         return $"{before}{after}".Trim();
     }
 
-    private static string AttachMealPreferenceSignature(string? summaryText, string signature)
+    private static string AttachStoredSignatures(
+        string? summaryText,
+        string mealSignature,
+        string workoutSignature)
     {
-        var cleanSummary = RemoveStoredMealPreferenceSignature(summaryText);
-        return $"{cleanSummary}\n[MEAL_PREF_SIGNATURE]: {signature}".Trim();
+        var cleanSummary = RemoveStoredSignatures(summaryText);
+
+        return $"""
+{cleanSummary}
+{MealPreferenceMarker} {mealSignature}
+{WorkoutPreferenceMarker} {workoutSignature}
+""".Trim();
     }
 
     private static string Serialize<T>(T value)

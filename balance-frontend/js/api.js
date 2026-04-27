@@ -4,6 +4,7 @@ import { getAuth, loadAppState } from "./common.js";
 function getApiBaseUrl() {
   const auth = getAuth();
   const state = loadAppState();
+
   return (auth.apiBaseUrl || state.apiBaseUrl || DEFAULT_API_BASE_URL).replace(/\/$/, "");
 }
 
@@ -18,6 +19,7 @@ function buildUrl(path) {
 
 function getAuthHeaders(extraHeaders = {}) {
   const auth = getAuth();
+
   const headers = {
     "Content-Type": "application/json",
     ...extraHeaders
@@ -32,22 +34,42 @@ function getAuthHeaders(extraHeaders = {}) {
 
 async function request(path, options = {}) {
   const response = await fetch(buildUrl(path), {
-    headers: getAuthHeaders(options.headers || {}),
-    ...options
+    ...options,
+    headers: getAuthHeaders(options.headers || {})
   });
 
+  const responseText = await response.text();
+
+  let data = null;
+
+  if (responseText) {
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = responseText;
+    }
+  }
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API error ${response.status}: ${errorText}`);
+    if (data && typeof data === "object" && data.message) {
+      throw new Error(data.message);
+    }
+
+    if (typeof data === "string" && data.trim()) {
+      throw new Error(data);
+    }
+
+    throw new Error("Something went wrong.");
   }
 
   if (response.status === 204) return null;
-  return response.json();
+
+  return data;
 }
 
 function getCurrentUserId(fallbackUserId) {
   const auth = getAuth();
-  return fallbackUserId || auth.userId || "";
+  return fallbackUserId || auth.userId || auth.user?.userId || "";
 }
 
 // Auth
@@ -69,8 +91,13 @@ export const changePassword = (payload) =>
     body: JSON.stringify(payload)
   });
 
-export const changeCurrentUserPassword = ({ currentPassword, newPassword, confirmNewPassword }) => {
+export const changeCurrentUserPassword = ({
+  currentPassword,
+  newPassword,
+  confirmNewPassword
+}) => {
   const userId = getCurrentUserId();
+
   if (!userId) throw new Error("No logged-in user found.");
 
   return changePassword({
@@ -86,7 +113,9 @@ export const getUserById = (id) => request(`/api/Users/${id}`);
 
 export const getCurrentUser = () => {
   const userId = getCurrentUserId();
+
   if (!userId) throw new Error("No logged-in user found.");
+
   return getUserById(userId);
 };
 
@@ -98,7 +127,9 @@ export const updateUserProfile = (id, payload) =>
 
 export const updateCurrentUserProfile = (payload) => {
   const userId = getCurrentUserId();
+
   if (!userId) throw new Error("No logged-in user found.");
+
   return updateUserProfile(userId, payload);
 };
 
@@ -115,8 +146,19 @@ export const updateCurrentUserMealPreferences = ({
     allergens
   });
 
-export const updateCurrentUserBodyStats = ({ heightCm, weightKg }) =>
+export const updateCurrentUserWorkoutPreferences = ({
+  workoutPreferenceId,
+  preferredWorkoutDurationMinutes
+}) =>
   updateCurrentUserProfile({
+    workoutPreferenceId,
+    preferredWorkoutDurationMinutes,
+    clearPreferredWorkoutDurationMinutes: preferredWorkoutDurationMinutes == null
+  });
+
+export const updateCurrentUserBodyStats = ({ age, heightCm, weightKg }) =>
+  updateCurrentUserProfile({
+    age,
     heightCm,
     weightKg
   });
@@ -124,13 +166,17 @@ export const updateCurrentUserBodyStats = ({ heightCm, weightKg }) =>
 // Events
 export const getEvents = (userId) => {
   const resolvedUserId = getCurrentUserId(userId);
-  return request(resolvedUserId ? `/api/Events?userId=${resolvedUserId}` : "/api/Events");
+
+  return request(
+    resolvedUserId ? `/api/Events?userId=${resolvedUserId}` : "/api/Events"
+  );
 };
 
 export const getEventById = (id) => request(`/api/Events/${id}`);
 
 export const createEvent = (payload) => {
   const resolvedUserId = getCurrentUserId(payload?.userId);
+
   return request("/api/Events", {
     method: "POST",
     body: JSON.stringify({
@@ -154,13 +200,19 @@ export const deleteEvent = (id) =>
 // Workout Logs
 export const getWorkoutLogs = (userId) => {
   const resolvedUserId = getCurrentUserId(userId);
-  return request(resolvedUserId ? `/api/WorkoutLogs?userId=${resolvedUserId}` : "/api/WorkoutLogs");
+
+  return request(
+    resolvedUserId
+      ? `/api/WorkoutLogs?userId=${resolvedUserId}`
+      : "/api/WorkoutLogs"
+  );
 };
 
 export const getWorkoutLogById = (id) => request(`/api/WorkoutLogs/${id}`);
 
 export const createWorkoutLog = (payload) => {
   const resolvedUserId = getCurrentUserId(payload?.userId);
+
   return request("/api/WorkoutLogs", {
     method: "POST",
     body: JSON.stringify({
@@ -184,13 +236,17 @@ export const deleteWorkoutLog = (id) =>
 // Meal Logs
 export const getMealLogs = (userId) => {
   const resolvedUserId = getCurrentUserId(userId);
-  return request(resolvedUserId ? `/api/MealLogs?userId=${resolvedUserId}` : "/api/MealLogs");
+
+  return request(
+    resolvedUserId ? `/api/MealLogs?userId=${resolvedUserId}` : "/api/MealLogs"
+  );
 };
 
 export const getMealLogById = (id) => request(`/api/MealLogs/${id}`);
 
 export const createMealLog = (payload) => {
   const resolvedUserId = getCurrentUserId(payload?.userId);
+
   return request("/api/MealLogs", {
     method: "POST",
     body: JSON.stringify({
@@ -214,13 +270,19 @@ export const deleteMealLog = (id) =>
 // Wellness Logs
 export const getWellnessLogs = (userId) => {
   const resolvedUserId = getCurrentUserId(userId);
-  return request(resolvedUserId ? `/api/WellnessLogs?userId=${resolvedUserId}` : "/api/WellnessLogs");
+
+  return request(
+    resolvedUserId
+      ? `/api/WellnessLogs?userId=${resolvedUserId}`
+      : "/api/WellnessLogs"
+  );
 };
 
 export const getWellnessLogById = (id) => request(`/api/WellnessLogs/${id}`);
 
 export const createWellnessLog = (payload) => {
   const resolvedUserId = getCurrentUserId(payload?.userId);
+
   return request("/api/WellnessLogs", {
     method: "POST",
     body: JSON.stringify({
@@ -244,13 +306,17 @@ export const deleteWellnessLog = (id) =>
 // Weekly Summaries
 export const getWeeklySummaries = (userId) => {
   const resolvedUserId = getCurrentUserId(userId);
+
   if (!resolvedUserId) throw new Error("No logged-in user found.");
+
   return request(`/api/WeeklySummaries?userId=${resolvedUserId}`);
 };
 
 export const generateWeeklySummary = (userId, weekStartDate) => {
   const resolvedUserId = getCurrentUserId(userId);
+
   if (!resolvedUserId) throw new Error("No logged-in user found.");
+
   return request(
     `/api/WeeklySummaries/generate?userId=${resolvedUserId}&weekStartDate=${weekStartDate}`,
     {
@@ -262,14 +328,18 @@ export const generateWeeklySummary = (userId, weekStartDate) => {
 // Daily Guidance
 export const generateDailyGuidance = (selectedDate) => {
   if (!selectedDate) throw new Error("Selected date is required.");
+
   return request(
     `/api/DailyGuidance/generate?selectedDate=${encodeURIComponent(selectedDate)}`,
-    { method: "POST" }
+    {
+      method: "POST"
+    }
   );
 };
 
 export const generateGuidanceSummary = (selectedDate, userId) => {
   const resolvedUserId = getCurrentUserId(userId);
+
   if (!resolvedUserId) throw new Error("No logged-in user found.");
 
   return request(
@@ -284,3 +354,4 @@ export const generateGuidanceSummary = (selectedDate, userId) => {
 export const getEventTypes = () => request("/api/EventTypes");
 export const getWorkoutTypes = () => request("/api/WorkoutTypes");
 export const getMealCategories = () => request("/api/MealCategories");
+export const getWorkoutPreferences = () => request("/api/WorkoutPreferences");
