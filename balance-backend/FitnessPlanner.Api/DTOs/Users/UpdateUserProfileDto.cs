@@ -16,4 +16,7 @@ public class UpdateUserProfileDto
     public bool? IsVegan { get; set; }
     public bool? IsGlutenFree { get; set; }
     public string? Allergens { get; set; }
+    public long? WorkoutPreferenceId { get; set; }
+    public int? PreferredWorkoutDurationMinutes { get; set; }
+    public bool? ClearPreferredWorkoutDurationMinutes { get; set; }
 }

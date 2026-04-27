@@ -87,7 +87,7 @@ function getPreviousWeekRange(selectedDate, weeksBack) {
   const currentWeek = getWeekRange(selectedDate);
 
   const start = new Date(currentWeek.start);
-  start.setDate(currentWeek.start.getDate() - (7 * weeksBack));
+  start.setDate(currentWeek.start.getDate() - 7 * weeksBack);
 
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
@@ -160,7 +160,7 @@ function renderWorkoutHoursChart(workouts, start, end) {
     }
   });
 
-  const maxYAxisHours = 6;
+  const maxYAxisHours = 3;
   const chartHeight = 170;
 
   if (els.chartRangeLabel) {
@@ -169,16 +169,16 @@ function renderWorkoutHoursChart(workouts, start, end) {
 
   els.workoutHoursChart.innerHTML = `
     <div class="chart-y-axis">
-      <span>6 hrs</span>
-      <span>4 hrs</span>
+      <span>3 hrs</span>
       <span>2 hrs</span>
+      <span>1 hr</span>
       <span>0 hrs</span>
     </div>
 
     <div class="chart-plot">
-      <div class="y-grid y-grid-6"></div>
-      <div class="y-grid y-grid-4"></div>
+      <div class="y-grid y-grid-3"></div>
       <div class="y-grid y-grid-2"></div>
+      <div class="y-grid y-grid-1"></div>
       <div class="y-grid y-grid-0"></div>
 
       <div class="chart-bars">

@@ -17,26 +17,26 @@
       <div id="statusMessage" class="success-box" style="display:none;"></div>
 
       <form id="eventForm" class="form-stack">
-        <div>
-          <label for="title">Event Title</label>
+        <div class="form-field">
+          <label for="title">Event Title*</label>
           <input id="title" type="text" placeholder="Algorithms Midterm" required />
         </div>
-
-        <div>
+      
+        <div class="form-field">
           <label for="description">Description</label>
           <textarea id="description" placeholder="Short description" rows="4"></textarea>
         </div>
-
+      
         <div class="split-grid">
-          <div>
-            <label for="eventTypeId">Event Type</label>
+          <div class="form-field">
+            <label for="eventTypeId">Event Type*</label>
             <select id="eventTypeId" required>
               <option value="">Select event type</option>
             </select>
           </div>
-
-          <div>
-            <label for="stressLevel">Stress Level</label>
+      
+          <div class="form-field">
+            <label for="stressLevel">Stress Level*</label>
             <select id="stressLevel" required>
               <option value="">Select stress level</option>
               <option value="Low">Low</option>
@@ -45,20 +45,19 @@
             </select>
           </div>
         </div>
-
+      
         <div class="split-grid">
-          <div>
+          <div class="form-field">
             <label for="startDate">Start Date</label>
             <input id="startDate" type="date" required />
           </div>
-
-          <div>
+      
+          <div class="form-field">
             <label for="endDate">End Date</label>
             <input id="endDate" type="date" required />
           </div>
         </div>
-
-    </form>
+      </form>
 
     <div class="toolbar split-links">
       <button id="submitBtn" type="submit" form="eventForm">Save Event</button>

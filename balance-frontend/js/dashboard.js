@@ -7,6 +7,8 @@ import {
   generateDailyGuidance,
   updateCurrentUserProfile,
   updateCurrentUserMealPreferences,
+  updateCurrentUserWorkoutPreferences,
+  getWorkoutPreferences,
   changeCurrentUserPassword,
   generateGuidanceSummary
 } from "./api.js";
@@ -35,17 +37,19 @@ const els = {
   selectedDate: document.getElementById("selectedDate"),
 
   profileMenuBtn: document.getElementById("profileMenuBtn"),
+  profileMenuTitle: document.getElementById("profileMenuTitle"),
   profileOverlay: document.getElementById("profileOverlay"),
   profileMenu: document.getElementById("profileMenu"),
   closeProfileMenuBtn: document.getElementById("closeProfileMenuBtn"),
   profileLogoutBtn: document.getElementById("profileLogoutBtn"),
-  openPasswordBtn: document.getElementById("openPasswordBtn"),
-  openMealPrefsBtn: document.getElementById("openMealPrefsBtn"),
-  openBodyStatsBtn: document.getElementById("openBodyStatsBtn"),
   profilePanelMessage: document.getElementById("profilePanelMessage"),
 
-  passwordForm: document.getElementById("passwordForm"),
-  mealPrefsForm: document.getElementById("mealPrefsForm"),
+  profileMenuView: document.getElementById("profileMenuView"),
+  profileEditView: document.getElementById("profileEditView"),
+
+  passwordForm: document.getElementById("passwordEditForm"),
+  mealPrefsForm: document.getElementById("mealPreferenceForm"),
+  workoutPrefsForm: document.getElementById("workoutPreferenceForm"),
   bodyStatsForm: document.getElementById("bodyStatsForm"),
 
   currentPassword: document.getElementById("currentPassword"),
@@ -55,6 +59,9 @@ const els = {
   dietType: document.getElementById("dietType"),
   isGlutenFree: document.getElementById("isGlutenFree"),
   allergens: document.getElementById("allergens"),
+
+  workoutPreferenceId: document.getElementById("workoutPreferenceId"),
+  preferredWorkoutDurationMinutes: document.getElementById("preferredWorkoutDurationMinutes"),
 
   heightCm: document.getElementById("heightCm"),
   weightKg: document.getElementById("weightKg"),
@@ -259,14 +266,123 @@ function renderStressLevel(selectedDateValue, wellnessLogs, events) {
 }
 
 function hideAllProfileForms() {
-  [els.passwordForm, els.mealPrefsForm, els.bodyStatsForm].forEach(form => {
-    form?.classList.add("hidden");
+  [
+    els.passwordForm,
+    els.mealPrefsForm,
+    els.workoutPrefsForm,
+    els.bodyStatsForm
+  ].forEach(form => {
+    if (form) form.hidden = true;
   });
 }
 
-function showProfileForm(form) {
+function showProfileMenuView() {
   hideAllProfileForms();
-  form?.classList.remove("hidden");
+
+  if (els.profileMenuTitle) {
+    els.profileMenuTitle.textContent = "Profile";
+  }
+
+  if (els.profileMenuView) els.profileMenuView.hidden = false;
+  if (els.profileEditView) els.profileEditView.hidden = true;
+
+  hideProfileMessage();
+}
+
+function showProfileEditView(form, title) {
+  if (els.profileMenuTitle) {
+    els.profileMenuTitle.textContent = title;
+  }
+
+  if (els.profileMenuView) els.profileMenuView.hidden = true;
+  if (els.profileEditView) els.profileEditView.hidden = false;
+
+  hideAllProfileForms();
+
+  if (form) form.hidden = false;
+}
+
+function normalizeLookupItems(response) {
+  if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.$values)) return response.$values;
+  if (Array.isArray(response?.items)) return response.items;
+  if (Array.isArray(response?.Items)) return response.Items;
+  if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.Data)) return response.Data;
+
+  return [];
+}
+
+async function loadWorkoutPreferenceOptions() {
+  if (!els.workoutPreferenceId) return;
+
+  const currentValue = els.workoutPreferenceId.value;
+
+  try {
+    const response = await getWorkoutPreferences();
+    const items = normalizeLookupItems(response);
+
+    els.workoutPreferenceId.innerHTML = `
+      <option value="">Select workout preference</option>
+      ${items
+        .map(item => {
+          const id =
+            item.workoutPreferenceId ??
+            item.WorkoutPreferenceId ??
+            item.id ??
+            item.Id;
+
+          const name =
+            item.name ??
+            item.Name ??
+            item.preferenceName ??
+            item.PreferenceName;
+
+          if (!id || !name) return "";
+
+          return `
+            <option value="${escapeHtml(id)}">
+              ${escapeHtml(name)}
+            </option>
+          `;
+        })
+        .join("")}
+    `;
+
+    if (currentValue) {
+      els.workoutPreferenceId.value = currentValue;
+    }
+  } catch (error) {
+    console.error("Failed to load workout preferences:", error);
+
+    els.workoutPreferenceId.innerHTML = `
+      <option value="">Unable to load workout preferences</option>
+    `;
+  }
+}
+
+function fillWorkoutPreferenceForm(user) {
+  const profile = user?.profile || user?.Profile || {};
+
+  const workoutPreferenceId =
+    profile.workoutPreferenceId ??
+    profile.WorkoutPreferenceId ??
+    profile.workoutPreference?.workoutPreferenceId ??
+    profile.WorkoutPreference?.WorkoutPreferenceId ??
+    "";
+
+  const preferredWorkoutDurationMinutes =
+    profile.preferredWorkoutDurationMinutes ??
+    profile.PreferredWorkoutDurationMinutes ??
+    "";
+
+  if (els.workoutPreferenceId) {
+    els.workoutPreferenceId.value = workoutPreferenceId ? String(workoutPreferenceId) : "";
+  }
+
+  if (els.preferredWorkoutDurationMinutes) {
+    els.preferredWorkoutDurationMinutes.value = preferredWorkoutDurationMinutes || "";
+  }
 }
 
 function showProfileMessage(message, isError = false) {
@@ -288,15 +404,13 @@ function hideProfileMessage() {
 function openProfileMenu() {
   els.profileOverlay?.classList.remove("hidden");
   els.profileMenuBtn?.setAttribute("aria-expanded", "true");
-  hideProfileMessage();
-  hideAllProfileForms();
+  showProfileMenuView();
 }
 
 function closeProfileMenu() {
   els.profileOverlay?.classList.add("hidden");
   els.profileMenuBtn?.setAttribute("aria-expanded", "false");
-  hideProfileMessage();
-  hideAllProfileForms();
+  showProfileMenuView();
 }
 
 function fillMealPreferenceForm(user) {
@@ -467,6 +581,7 @@ async function loadDashboard() {
 
     fillMealPreferenceForm(user);
     fillBodyStatsForm(user);
+    fillWorkoutPreferenceForm(user);
 
     setStatus(els.status, "Dashboard loaded.", false);
   } catch (error) {
@@ -546,27 +661,40 @@ function initProfileMenu() {
     logout();
   });
 
-  els.openPasswordBtn?.addEventListener("click", () => {
-    hideProfileMessage();
-    showProfileForm(els.passwordForm);
-  });
-
-  els.openMealPrefsBtn?.addEventListener("click", () => {
-    hideProfileMessage();
-    fillMealPreferenceForm(currentUser);
-    showProfileForm(els.mealPrefsForm);
-  });
-
-  els.openBodyStatsBtn?.addEventListener("click", () => {
-    hideProfileMessage();
-    fillBodyStatsForm(currentUser);
-    showProfileForm(els.bodyStatsForm);
-  });
-
-  document.querySelectorAll(".close-profile-form-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      hideAllProfileForms();
+  document.querySelectorAll("[data-profile-edit]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const editType = button.dataset.profileEdit;
+  
       hideProfileMessage();
+  
+      if (editType === "password") {
+        showProfileEditView(els.passwordForm, "Change Password");
+        return;
+      }
+  
+      if (editType === "meal") {
+        fillMealPreferenceForm(currentUser);
+        showProfileEditView(els.mealPrefsForm, "Edit Meal Preference");
+        return;
+      }
+  
+      if (editType === "workout") {
+        showProfileEditView(els.workoutPrefsForm, "Edit Workout Preference");
+        await loadWorkoutPreferenceOptions();
+        fillWorkoutPreferenceForm(currentUser);
+        return;
+      }
+  
+      if (editType === "body") {
+        fillBodyStatsForm(currentUser);
+        showProfileEditView(els.bodyStatsForm, "Edit Body Stats");
+      }
+    });
+  });
+
+  document.querySelectorAll(".profileBackBtn").forEach(button => {
+    button.addEventListener("click", () => {
+      showProfileMenuView();
     });
   });
 
@@ -627,9 +755,55 @@ function initProfileMenu() {
       currentUser.profile.allergens = allergens;
 
       showProfileMessage("Meal preferences updated.");
+
+      await loadDashboard();
     } catch (error) {
       console.error(error);
       showProfileMessage(error.message || "Failed to update meal preferences.", true);
+    }
+  });
+
+  els.workoutPrefsForm?.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    try {
+      const workoutPreferenceIdValue = els.workoutPreferenceId?.value || "";
+      const preferredWorkoutDurationValue =
+        els.preferredWorkoutDurationMinutes?.value?.trim() || "";
+
+      const payload = {
+        workoutPreferenceId: workoutPreferenceIdValue
+          ? Number(workoutPreferenceIdValue)
+          : null,
+        preferredWorkoutDurationMinutes: preferredWorkoutDurationValue
+          ? Number(preferredWorkoutDurationValue)
+          : null
+      };
+
+      await updateCurrentUserWorkoutPreferences(payload);
+
+      if (!currentUser) currentUser = {};
+      if (!currentUser.profile) currentUser.profile = {};
+
+      currentUser.profile.workoutPreferenceId = payload.workoutPreferenceId;
+      currentUser.profile.preferredWorkoutDurationMinutes =
+        payload.preferredWorkoutDurationMinutes;
+
+      const selectedOption = els.workoutPreferenceId?.selectedOptions?.[0];
+
+      currentUser.profile.workoutPreference = payload.workoutPreferenceId
+        ? {
+            workoutPreferenceId: payload.workoutPreferenceId,
+            name: selectedOption?.textContent?.trim() || ""
+          }
+        : null;
+
+      showProfileMessage("Workout preferences updated.");
+
+      await loadDashboard();
+    } catch (error) {
+      console.error(error);
+      showProfileMessage(error.message || "Failed to update workout preferences.", true);
     }
   });
 
@@ -641,6 +815,25 @@ function initProfileMenu() {
       const heightValue = els.heightCm?.value?.trim() || "";
       const weightValue = els.weightKg?.value?.trim() || "";
 
+      const age = ageValue ? Number(ageValue) : null;
+      const heightCm = heightValue ? Number(heightValue) : null;
+      const weightKg = weightValue ? Number(weightValue) : null;
+
+      if (age !== null && (Number.isNaN(age) || age < 13 || age > 99)) {
+        showProfileMessage("Age must be between 13 and 99.", true);
+        return;
+      }
+
+      if (heightCm !== null && (Number.isNaN(heightCm) || heightCm < 1 || heightCm > 250)) {
+        showProfileMessage("Height must be between 1 and 250 cm.", true);
+        return;
+      }
+  
+      if (weightKg !== null && (Number.isNaN(weightKg) || weightKg < 1 || weightKg > 650)) {
+        showProfileMessage("Weight must be between 1 and 650 kg.", true);
+        return;
+      }
+
       await updateCurrentUserProfile({
         age: ageValue ? Number(ageValue) : null,
         heightCm: heightValue ? Number(heightValue) : null,
@@ -650,11 +843,13 @@ function initProfileMenu() {
       if (!currentUser) currentUser = {};
       if (!currentUser.profile) currentUser.profile = {};
 
-      currentUser.profile.age = ageValue ? Number(ageValue) : null;
-      currentUser.profile.heightCm = heightValue ? Number(heightValue) : null;
-      currentUser.profile.weightKg = weightValue ? Number(weightValue) : null;
+      currentUser.profile.age = age;
+      currentUser.profile.heightCm = heightCm;
+      currentUser.profile.weightKg = weightKg;
 
       showProfileMessage("Body stats updated.");
+
+      await loadDashboard();
     } catch (error) {
       console.error(error);
       showProfileMessage(error.message || "Failed to update body stats.", true);
@@ -681,4 +876,5 @@ window.addEventListener("storage", event => {
 initCompletedPopovers();
 initSelectedDate();
 initProfileMenu();
+loadWorkoutPreferenceOptions();
 loadDashboard();

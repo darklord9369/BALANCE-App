@@ -22,4 +22,6 @@ public class DailyGuidanceContextDto
     public bool? IsVegan { get; set; }
     public bool? IsGlutenFree { get; set; }
     public string? Allergens { get; set; }
+    public string? WorkoutPreference { get; set; }
+    public int? PreferredWorkoutDurationMinutes { get; set; }
 }

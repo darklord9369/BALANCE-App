@@ -101,11 +101,28 @@ Critical rules:
 - If USER_PROFILE lists allergens, do not suggest foods containing those allergens.
 - Meal guidance must strictly respect DietType even if recent logged meals suggest otherwise.
 - Age is context only; use it to keep recommendations reasonable and general, not medical.
+
+Workout preference rules:
+- Workout guidance must consider USER_WORKOUT_PREFERENCES.
+- If WorkoutPreference is General Fitness, suggest balanced everyday movement.
+- If WorkoutPreference is Build Strength, suggest strength-focused movements such as bodyweight, resistance, or gym-style strength exercises.
+- If WorkoutPreference is Weight Loss, suggest sustainable calorie-burning movement without guilt-based language.
+- If WorkoutPreference is Endurance, suggest stamina or cardio-focused options.
+- If WorkoutPreference is Mobility & Flexibility, suggest stretching, yoga, mobility, or joint-friendly movement.
+- If WorkoutPreference is Recovery, suggest gentle active recovery and avoid intense workouts.
+- If WorkoutPreference is Beginner-Friendly, suggest simple low-barrier movements.
+- Respect PreferredWorkoutDurationMinutes when choosing workout length.
+- Still adjust intensity based on academic events, stress, completed workouts, and recovery.
+- If stress is high or events look demanding, prefer lighter workouts even if the user prefers intense training.
+
+Completed-item rules:
 - NEVER invent completed workouts or completed meals.
 - The completed arrays must exactly reflect the provided TODAY_COMPLETED_WORKOUTS and TODAY_COMPLETED_MEALS lists.
 - If TODAY_COMPLETED_WORKOUTS is empty, workout.completed must be [].
 - If TODAY_COMPLETED_MEALS is empty, meals.completed must be [].
 - Do not add dates, durations, or labels that are not already provided.
+
+Plan rules:
 - Keep suggestions supportive and practical.
 - Avoid guilt-based language.
 - Keep each item short.
@@ -180,6 +197,11 @@ Critical rules:
         sb.AppendLine($"- IsVegan: {(context.IsVegan.HasValue ? context.IsVegan.Value.ToString() : "Unknown")}");
         sb.AppendLine($"- IsGlutenFree: {(context.IsGlutenFree.HasValue ? context.IsGlutenFree.Value.ToString() : "Unknown")}");
         sb.AppendLine($"- Allergens: {(!string.IsNullOrWhiteSpace(context.Allergens) ? context.Allergens : "None specified")}");
+
+        sb.AppendLine();
+        sb.AppendLine("USER_WORKOUT_PREFERENCES:");
+        sb.AppendLine($"- WorkoutPreference: {(!string.IsNullOrWhiteSpace(context.WorkoutPreference) ? context.WorkoutPreference : "Not specified")}");
+        sb.AppendLine($"- PreferredWorkoutDurationMinutes: {(context.PreferredWorkoutDurationMinutes.HasValue ? context.PreferredWorkoutDurationMinutes.Value.ToString() : "Not specified")}");
 
         sb.AppendLine();
         sb.AppendLine("RECENT_WORKOUTS:");
@@ -312,6 +334,10 @@ Critical rules:
         sb.AppendLine("- Should suggest actual dishes/ food items instead of giving generic response.");
         sb.AppendLine("- Keep the daily guidance consistent with any prior plan.");
         sb.AppendLine("- Do not drastically change the plan unless clearly necessary.");
+        sb.AppendLine("- Use USER_WORKOUT_PREFERENCES when generating workout.initialPlan and workout.currentPlan.");
+        sb.AppendLine("- If a workout preference is provided, make at least 2 workout suggestions align with that preference unless stress or events require a lighter approach.");
+        sb.AppendLine("- If PreferredWorkoutDurationMinutes is provided, make workout suggestions fit within that duration.");
+        sb.AppendLine("- Do not suggest workouts longer than the user's preferred workout duration unless clearly framed as optional.");
         sb.AppendLine("- If a heavier workout is already completed, suggest lighter movement for the rest of the day.");
         sb.AppendLine("- If no events are logged, the overall day is likely lower stress.");
         sb.AppendLine("- Meal guidance must respect diet type, vegan preference, gluten-free preference, and allergens.");
@@ -388,19 +414,13 @@ Critical rules:
             })
             .ToList();
 
-        var defaultWorkoutPlan = new List<string>
-    {
-        "5 to 10 minutes of mobility or stretching",
-        "Short walk or light cardio break",
-        "Easy bodyweight movement if energy feels good"
-    };
-
+        var defaultWorkoutPlan = BuildDefaultWorkoutPlan(context);
         var defaultMealPlan = new List<string>
-    {
-        "Balanced meal with protein and steady carbs",
-        "Hydrate with water through the day",
-        "Add a simple snack if energy drops"
-    };
+        {
+            "Balanced meal with protein and steady carbs",
+            "Hydrate with water through the day",
+            "Add a simple snack if energy drops"
+        };
 
         if (!result.Workout.InitialPlan.Any())
         {
@@ -438,6 +458,57 @@ Critical rules:
         }
     }
 
+    private static List<string> BuildDefaultWorkoutPlan(DailyGuidanceContextDto context)
+    {
+        var preference = context.WorkoutPreference?.Trim().ToLowerInvariant() ?? "";
+
+        return preference switch
+        {
+            "build strength" => new List<string>
+            {
+                "Bodyweight squats or modified push-ups",
+                "Light resistance training if energy feels good",
+                "5 to 10 minutes of mobility or stretching"
+            },
+            "weight loss" => new List<string>
+            {
+                "Brisk walk or light cardio session",
+                "Short bodyweight circuit at a comfortable pace",
+                "5 to 10 minutes of mobility or stretching"
+            },
+            "endurance" => new List<string>
+            {
+                "Easy jog, cycling, or brisk walk",
+                "Short steady cardio block if energy feels good",
+                "5 to 10 minutes of mobility or stretching"
+            },
+            "mobility & flexibility" => new List<string>
+            {
+                "Gentle yoga or full-body mobility flow",
+                "Hip, shoulder, and back stretches",
+                "Short walk to loosen up"
+            },
+            "recovery" => new List<string>
+            {
+                "Gentle walk or easy movement break",
+                "Light stretching or breathing-focused mobility",
+                "Prioritize rest if energy feels low"
+            },
+            "beginner-friendly" => new List<string>
+            {
+                "Short walk at a comfortable pace",
+                "Simple bodyweight movement like squats or wall push-ups",
+                "5 to 10 minutes of stretching"
+            },
+            _ => new List<string>
+            {
+                "5 to 10 minutes of mobility or stretching",
+                "Short walk or light cardio break",
+                "Easy bodyweight movement if energy feels good"
+            }
+        };
+    }
+
     private static List<string> CleanList(IEnumerable<string>? values)
     {
         return (values ?? Enumerable.Empty<string>())
@@ -447,28 +518,28 @@ Critical rules:
             .Take(4)
             .ToList();
     }
-    
+
     private static List<string> EnsureMinimumItems(
-    List<string> values,
-    List<string> fallbackItems,
-    int minimumCount)
-{
-    var finalItems = values
-        .Where(x => !string.IsNullOrWhiteSpace(x))
-        .Select(x => x.Trim())
-        .Distinct()
-        .ToList();
-
-    foreach (var fallback in fallbackItems)
+        List<string> values,
+        List<string> fallbackItems,
+        int minimumCount)
     {
-        if (finalItems.Count >= minimumCount) break;
+        var finalItems = values
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct()
+            .ToList();
 
-        if (!finalItems.Contains(fallback, StringComparer.OrdinalIgnoreCase))
+        foreach (var fallback in fallbackItems)
         {
-            finalItems.Add(fallback);
-        }
-    }
+            if (finalItems.Count >= minimumCount) break;
 
-    return finalItems.Take(4).ToList();
-}
+            if (!finalItems.Contains(fallback, StringComparer.OrdinalIgnoreCase))
+            {
+                finalItems.Add(fallback);
+            }
+        }
+
+        return finalItems.Take(4).ToList();
+    }
 }
